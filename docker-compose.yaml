@@ -1,0 +1,46 @@
+services:
+  bruhfinancebackend:
+    container_name: bruh.finance.backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-admin}
+      - SECRET_KEY=${SECRET_KEY:-temp-secret-key-change-in-production}
+    volumes:
+      - db_data:/app/db
+      - media_data:/app/media
+    networks:
+      - app-network
+
+  bruhfinancefrontend:
+    container_name: bruh.finance.frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_APP_BACKEND_API_URL=${VITE_APP_BACKEND_API_URL:-http://localhost:8001}
+        - VITE_APP_BACKEND_API_VERSION=${VITE_APP_BACKEND_API_VERSION:-api}
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+      - "8443:443"
+    depends_on:
+      - bruhfinancebackend
+    volumes:
+      - media_data:/usr/share/nginx/media:ro
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  media_data:

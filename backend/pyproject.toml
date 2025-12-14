@@ -1,0 +1,44 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "ethanlchristensen",email = "ethanlchristensen@outlook.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django (>=5.2.8,<6.0.0)",
+    "django-ninja (>=1.5.0,<2.0.0)",
+    "django-ninja-jwt (>=5.4.2,<6.0.0)",
+    "django-cors-headers (>=4.9.0,<5.0.0)",
+    "django-stubs (>=5.2.7,<6.0.0)",
+    "gunicorn (>=23.0.0,<24.0.0)",
+    "channels (>=4.3.2,<5.0.0)",
+    "pillow (>=12.0.0,<13.0.0)",
+    "daphne (>=4.2.1,<5.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.14.6,<0.15.0)"
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"] 
+
+
+[tool.ruff.format]
