@@ -1,5 +1,6 @@
 import { AppProvider } from "./provider";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { AuthProvider } from "@/lib/auth-context";
 
 import { routeTree } from "@/routeTree.gen";
 
@@ -14,7 +15,9 @@ declare module "@tanstack/react-router" {
 export const App = () => {
   return (
     <AppProvider>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </AppProvider>
   );
 };

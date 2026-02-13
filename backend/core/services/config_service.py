@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 
 class Config(BaseModel):
-
     allowed_hosts: List[str]
     media_root: str
 

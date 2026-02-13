@@ -1,11 +1,10 @@
-// src/components/theme/theme-provider.tsx
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type EffectiveTheme = "dark" | "light";
 type Theme = EffectiveTheme | "system";
 type BaseTheme = "neutral" | "stone" | "zinc" | "gray";
 type AccentColor =
-  | "none" // Add this
+  | "none"
   | "red"
   | "rose"
   | "orange"
@@ -48,7 +47,7 @@ const initialState: ThemeProviderState = {
   theme: "system",
   effectiveTheme: "dark",
   baseTheme: "zinc",
-  accentColor: "none", // Changed default
+  accentColor: "none",
   setTheme: () => null,
   setBaseTheme: () => null,
   setAccentColor: () => null,
@@ -56,68 +55,69 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+function getSystemTheme(): EffectiveTheme {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   defaultBaseTheme = "zinc",
-  defaultAccentColor = "none", // Changed default
+  defaultAccentColor = "none",
   storageKey = "bruh-ui-theme",
   baseThemeStorageKey = "bruh-ui-base-theme",
   accentColorStorageKey = "bruh-ui-accent-color",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
-  );
+  const [theme, setThemeState] = useState<Theme>(() => {
+    return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+  });
 
-  const [baseTheme, setBaseTheme] = useState<BaseTheme>(
-    () =>
-      (localStorage.getItem(baseThemeStorageKey) as BaseTheme) ||
-      defaultBaseTheme,
-  );
+  const [baseTheme, setBaseThemeState] = useState<BaseTheme>(() => {
+    return (localStorage.getItem(baseThemeStorageKey) as BaseTheme) || defaultBaseTheme;
+  });
 
-  const [accentColor, setAccentColor] = useState<AccentColor>(
-    () =>
-      (localStorage.getItem(accentColorStorageKey) as AccentColor) ||
-      defaultAccentColor,
-  );
+  const [accentColor, setAccentColorState] = useState<AccentColor>(() => {
+    return (localStorage.getItem(accentColorStorageKey) as AccentColor) || defaultAccentColor;
+  });
 
-  const [effectiveTheme, setEffectiveTheme] = useState<EffectiveTheme>("dark");
+  // Only needed if you want live updates when theme === "system"
+  const [systemTheme, setSystemTheme] = useState<EffectiveTheme>(() => getSystemTheme());
 
-  // Handle light/dark theme
   useEffect(() => {
-    const root = window.document.documentElement;
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => setSystemTheme(mql.matches ? "dark" : "light");
 
+    // modern + fallback
+    if (mql.addEventListener) mql.addEventListener("change", handler);
+    else mql.addListener(handler);
+
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener("change", handler);
+      else mql.removeListener(handler);
+    };
+  }, []);
+
+  const effectiveTheme: EffectiveTheme = useMemo(() => {
+    return theme === "system" ? systemTheme : theme;
+  }, [theme, systemTheme]);
+
+  // Sync theme classes to DOM (external side effect)
+  useEffect(() => {
+    const root = document.documentElement;
     root.classList.remove("light", "dark");
+    root.classList.add(effectiveTheme);
+  }, [effectiveTheme]);
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      setEffectiveTheme(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-    setEffectiveTheme(theme);
-  }, [theme]);
-
-  // Handle base theme
   useEffect(() => {
-    const root = window.document.documentElement;
-
+    const root = document.documentElement;
     root.classList.remove("neutral", "stone", "zinc", "gray");
     root.classList.add(baseTheme);
   }, [baseTheme]);
 
-  // Handle accent color
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = document.documentElement;
 
-    // Remove all accent colors
     root.classList.remove(
       "red",
       "rose",
@@ -138,28 +138,25 @@ export function ThemeProvider({
       "pink",
     );
 
-    // Only add accent color if it's not "none"
-    if (accentColor !== "none") {
-      root.classList.add(accentColor);
-    }
+    if (accentColor !== "none") root.classList.add(accentColor);
   }, [accentColor]);
 
-  const value = {
+  const value: ThemeProviderState = {
     theme,
     effectiveTheme,
     baseTheme,
     accentColor,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
+    setTheme: (next) => {
+      localStorage.setItem(storageKey, next);
+      setThemeState(next);
     },
-    setBaseTheme: (baseTheme: BaseTheme) => {
-      localStorage.setItem(baseThemeStorageKey, baseTheme);
-      setBaseTheme(baseTheme);
+    setBaseTheme: (next) => {
+      localStorage.setItem(baseThemeStorageKey, next);
+      setBaseThemeState(next);
     },
-    setAccentColor: (accentColor: AccentColor) => {
-      localStorage.setItem(accentColorStorageKey, accentColor);
-      setAccentColor(accentColor);
+    setAccentColor: (next) => {
+      localStorage.setItem(accentColorStorageKey, next);
+      setAccentColorState(next);
     },
   };
 
@@ -172,9 +169,6 @@ export function ThemeProvider({
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
-
+  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
   return context;
 };

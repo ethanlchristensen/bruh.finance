@@ -1,20 +1,17 @@
-import type React from "react";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, DollarSign, TrendingUp, Calendar } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { getFinanceData } from "@/lib/finance-storage";
 import type { RecurringBill, Paycheck, Expense } from "@/lib/types";
 
 interface PayPeriod {
   startDate: Date;
   endDate: Date;
-  paycheck: Paycheck;
+  paycheck: Paycheck & { dateObj: Date };
   essentialBills: RecurringBill[];
   expenses: Expense[];
   priorityPayments: { bill: RecurringBill; amount: number }[];
@@ -30,48 +27,106 @@ interface BillPriority {
   monthlyExtraPayment: number;
 }
 
+function parseISODate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export default function PriorityPage() {
-  const [financeData, setFinanceData] =
-    useState<ReturnType<typeof getFinanceData>>(null);
-  const [payPeriods, setPayPeriods] = useState<PayPeriod[]>([]);
-  const [priorities, setPriorities] = useState<BillPriority[]>([]);
+  // Initialize from storage during first render (no effect needed).
+  const [financeData] = useState(() => getFinanceData());
 
+  const [priorities, setPriorities] = useState<BillPriority[]>(() => {
+    const saved = localStorage.getItem("billPriorities");
+    return saved ? (JSON.parse(saved) as BillPriority[]) : [];
+  });
+
+  // Redirect if missing data (effect is fine here because it's an external action).
   useEffect(() => {
-    const data = getFinanceData();
-    if (!data) {
-      window.location.href = "/setup";
-      return;
-    }
-    setFinanceData(data);
+    if (!financeData) window.location.href = "/setup";
+  }, [financeData]);
 
-    // Load saved priorities
-    const savedPriorities = localStorage.getItem("billPriorities");
-    if (savedPriorities) {
-      setPriorities(JSON.parse(savedPriorities));
-    }
+  // Sync priorities OUT to storage (effects are meant for this).
+  useEffect(() => {
+    localStorage.setItem("billPriorities", JSON.stringify(priorities));
+  }, [priorities]);
+
+  const handlePriorityChange = useCallback((billId: string, amount: string) => {
+    const numAmount = Number.parseFloat(amount) || 0;
+
+    setPriorities((prev) => {
+      const idx = prev.findIndex((p) => p.billId === billId);
+
+      if (idx >= 0) {
+        if (numAmount === 0) return prev.filter((p) => p.billId !== billId);
+        const next = [...prev];
+        next[idx] = { billId, monthlyExtraPayment: numAmount };
+        return next;
+      }
+
+      if (numAmount > 0) return [...prev, { billId, monthlyExtraPayment: numAmount }];
+      return prev;
+    });
   }, []);
 
-  useEffect(() => {
-    if (financeData) {
-      calculatePayPeriods();
-    }
-  }, [financeData, priorities]);
+  const getPriorityAmount = useCallback(
+    (billId: string) => priorities.find((p) => p.billId === billId)?.monthlyExtraPayment || 0,
+    [priorities],
+  );
 
-  const calculatePayPeriods = () => {
-    if (!financeData) return;
+  const billsWithTotal = useMemo(() => {
+    if (!financeData) return [];
+    return financeData.recurringBills.filter((b) => b.total);
+  }, [financeData]);
 
-    // Get next 3 months of paychecks
+  // Derived data: compute with useMemo (no setState).
+  const payPeriods = useMemo<PayPeriod[]>(() => {
+    if (!financeData) return [];
+
     const today = new Date();
     const threeMonthsFromNow = new Date(today);
     threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
 
     const upcomingPaychecks = financeData.paychecks
-      .map((pc) => {
-        const [year, month, day] = pc.date.split("-").map(Number);
-        return { ...pc, dateObj: new Date(year, month - 1, day) };
-      })
+      .map((pc) => ({ ...pc, dateObj: parseISODate(pc.date) }))
       .filter((pc) => pc.dateObj >= today && pc.dateObj <= threeMonthsFromNow)
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+
+    const getBillsInDateRange = (start: Date, end: Date): RecurringBill[] => {
+      const bills: RecurringBill[] = [];
+      const current = new Date(start);
+
+      while (current <= end) {
+        const dayBills = financeData.recurringBills.filter((bill) => {
+          const isCorrectDay = bill.dueDay === current.getDate();
+          const isPaidOff = bill.total && bill.amountPaid && bill.amountPaid >= bill.total;
+          return isCorrectDay && !isPaidOff;
+        });
+
+        bills.push(...dayBills);
+        current.setDate(current.getDate() + 1);
+      }
+
+      return bills;
+    };
+
+    const getExpensesInDateRange = (start: Date, end: Date): Expense[] => {
+      return financeData.expenses.filter((exp) => {
+        const expDate = parseISODate(exp.date);
+        return expDate >= start && expDate <= end;
+      });
+    };
+
+    const priorityPaymentsAll = priorities
+      .map((priority) => {
+        const bill = financeData.recurringBills.find((b) => b.id === priority.billId);
+        if (!bill || !bill.total) return null;
+
+        const remaining = bill.total - (bill.amountPaid || 0);
+        const amount = Math.min(priority.monthlyExtraPayment, remaining);
+        return { bill, amount };
+      })
+      .filter(Boolean) as { bill: RecurringBill; amount: number }[];
 
     const periods: PayPeriod[] = [];
 
@@ -84,42 +139,18 @@ export default function PriorityPage() {
         ? new Date(nextPaycheck.dateObj.getTime() - 1)
         : new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-      // Get bills in this period
       const billsInPeriod = getBillsInDateRange(startDate, endDate);
-
-      // Get expenses in this period
       const expensesInPeriod = getExpensesInDateRange(startDate, endDate);
 
-      // Calculate priority payments
-      const priorityPayments = priorities
-        .map((priority) => {
-          const bill = financeData.recurringBills.find(
-            (b) => b.id === priority.billId,
-          );
-          if (!bill || !bill.total) return null;
-
-          const remaining = bill.total - (bill.amountPaid || 0);
-          const amount = Math.min(priority.monthlyExtraPayment, remaining);
-
-          return { bill, amount };
-        })
-        .filter((p) => p !== null) as { bill: RecurringBill; amount: number }[];
+      // If you intend "monthly extra", you probably want to allocate per pay period (optional).
+      // For now, this matches your original behavior (apply full extra each pay period).
+      const priorityPayments = priorityPaymentsAll;
 
       const totalIncome = currentPaycheck.amount;
-      const totalEssential = billsInPeriod.reduce(
-        (sum, b) => sum + b.amount,
-        0,
-      );
-      const totalExpenses = expensesInPeriod.reduce(
-        (sum, e) => sum + e.amount,
-        0,
-      );
-      const totalPriority = priorityPayments.reduce(
-        (sum, p) => sum + p.amount,
-        0,
-      );
-      const discretionaryAmount =
-        totalIncome - totalEssential - totalExpenses - totalPriority;
+      const totalEssential = billsInPeriod.reduce((sum, b) => sum + b.amount, 0);
+      const totalExpenses = expensesInPeriod.reduce((sum, e) => sum + e.amount, 0);
+      const totalPriority = priorityPayments.reduce((sum, p) => sum + p.amount, 0);
+      const discretionaryAmount = totalIncome - totalEssential - totalExpenses - totalPriority;
 
       periods.push({
         startDate,
@@ -136,73 +167,8 @@ export default function PriorityPage() {
       });
     }
 
-    setPayPeriods(periods);
-  };
-
-  const getBillsInDateRange = (start: Date, end: Date): RecurringBill[] => {
-    if (!financeData) return [];
-
-    const bills: RecurringBill[] = [];
-    const current = new Date(start);
-
-    while (current <= end) {
-      const dayBills = financeData.recurringBills.filter((bill) => {
-        const isCorrectDay = bill.dueDay === current.getDate();
-        const isPaidOff =
-          bill.total && bill.amountPaid && bill.amountPaid >= bill.total;
-        return isCorrectDay && !isPaidOff;
-      });
-
-      bills.push(...dayBills);
-      current.setDate(current.getDate() + 1);
-    }
-
-    return bills;
-  };
-
-  const getExpensesInDateRange = (start: Date, end: Date): Expense[] => {
-    if (!financeData) return [];
-
-    return financeData.expenses.filter((exp) => {
-      const [year, month, day] = exp.date.split("-").map(Number);
-      const expDate = new Date(year, month - 1, day);
-      return expDate >= start && expDate <= end;
-    });
-  };
-
-  const handlePriorityChange = (billId: string, amount: string) => {
-    const numAmount = Number.parseFloat(amount) || 0;
-    const existingIndex = priorities.findIndex((p) => p.billId === billId);
-
-    let newPriorities: BillPriority[];
-    if (existingIndex >= 0) {
-      if (numAmount === 0) {
-        newPriorities = priorities.filter((p) => p.billId !== billId);
-      } else {
-        newPriorities = [...priorities];
-        newPriorities[existingIndex] = {
-          billId,
-          monthlyExtraPayment: numAmount,
-        };
-      }
-    } else if (numAmount > 0) {
-      newPriorities = [
-        ...priorities,
-        { billId, monthlyExtraPayment: numAmount },
-      ];
-    } else {
-      newPriorities = priorities;
-    }
-
-    setPriorities(newPriorities);
-    localStorage.setItem("billPriorities", JSON.stringify(newPriorities));
-  };
-
-  const getPriorityAmount = (billId: string): number => {
-    return (
-      priorities.find((p) => p.billId === billId)?.monthlyExtraPayment || 0
-    );
-  };
+    return periods;
+  }, [financeData, priorities]);
 
   if (!financeData) {
     return (
@@ -211,8 +177,6 @@ export default function PriorityPage() {
       </div>
     );
   }
-
-  const billsWithTotal = financeData.recurringBills.filter((b) => b.total);
 
   return (
     <div className="min-h-screen bg-background">

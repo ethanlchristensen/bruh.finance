@@ -194,6 +194,7 @@ class ApiClient {
         errorData = await response.json();
         errorMessage = errorData.message || errorData.detail || errorMessage;
       } catch (e) {
+        console.error("ERROR: ", e);
         errorMessage = response.statusText || errorMessage;
       }
 

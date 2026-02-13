@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8001:8000"
+      - "8002:8000"
     environment:
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
@@ -28,8 +28,8 @@ services:
         - VITE_APP_BACKEND_API_VERSION=${VITE_APP_BACKEND_API_VERSION:-api}
     restart: unless-stopped
     ports:
-      - "5174:80"
-      - "8443:443"
+      - "5176:80"
+      - "8446:443"
     depends_on:
       - bruhfinancebackend
     volumes:

@@ -2,7 +2,7 @@ export interface FinanceAccount {
   startingBalance: number;
   currentBalance: number;
   balanceAsOfDate: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface RecurringBill {

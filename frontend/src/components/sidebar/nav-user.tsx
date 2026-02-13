@@ -1,4 +1,4 @@
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import { ChevronsUpDown, LogOut, BadgeCheck } from "lucide-react";
 
 import { useNavigate, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,6 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
@@ -33,10 +34,17 @@ interface User {
 }
 
 export function NavUser({ user }: { user: User }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const { isMobile } = useSidebar();
 
+  const handleLogout = () => {
+    logout();
+    navigate({ to: "/login" });
+  };
+
   const { data: cachedImageUrl } = useCachedProfileImage(
-    user.profile.profile_image,
+    user.profile.profile_image
   );
 
   const fullName =
@@ -95,7 +103,16 @@ export function NavUser({ user }: { user: User }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem>
+                <Link to="/profile" className="flex items-center gap-2">
+                  <BadgeCheck />
+                  Account
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

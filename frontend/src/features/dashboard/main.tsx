@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 
 import { useEffect, useState } from "react";
@@ -30,35 +28,33 @@ import {
   CalendarIcon,
   Trash2,
   Upload,
-  TrendingUp,
+  Download,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import {
   getFinanceData,
-  initializeAccount,
   addRecurringBill,
   addExpense,
   propagatePaychecks,
   deleteRecurringBill,
   deletePaycheck,
   deleteExpense,
-} from "@/lib/finance-storage";
-import type { RecurringBill, Paycheck, Expense } from "@/lib/types";
+  getCalendarData,
+  importCSV,
+  type CalendarDay as ApiCalendarDay,
+} from "@/lib/finance-api";
 
-interface CalendarDay {
+interface CalendarDay extends Omit<ApiCalendarDay, "date"> {
   date: Date;
-  isCurrentMonth: boolean;
-  bills: RecurringBill[];
-  paychecks: Paycheck[];
-  expenses: Expense[];
-  runningBalance: number;
 }
 
 export default function DashboardPage() {
-  const [financeData, setFinanceData] =
-    useState<ReturnType<typeof getFinanceData>>(null);
+  const [financeData, setFinanceData] = useState<Awaited<
+    ReturnType<typeof getFinanceData>
+  > | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
+  const [allCalendarDays, setAllCalendarDays] = useState<CalendarDay[]>([]); // All calculated days
+  const [monthsToShow, setMonthsToShow] = useState(3);
 
   // Dialog states
   const [billDialogOpen, setBillDialogOpen] = useState(false);
@@ -86,217 +82,159 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    const data = getFinanceData();
-    if (!data) {
-      const accountData = localStorage.getItem("financeAccount");
-      if (accountData) {
-        const account = JSON.parse(accountData);
-        initializeAccount(
-          account.startingBalance,
-          account.balanceAsOfDate || new Date().toISOString().split("T")[0],
-        );
-        setFinanceData(getFinanceData());
-      } else {
-        window.location.href = "/settings";
+    async function loadFinanceData() {
+      try {
+        console.log("Starting to load finance data...");
+        const data = await getFinanceData();
+        console.log("Finance data loaded successfully:", data);
+        setFinanceData(data);
+      } catch (error: any) {
+        console.error("Failed to load finance data:", error);
+        console.error("Error message:", error?.message);
+        console.error("Error type:", typeof error);
+        console.error("Full error object:", JSON.stringify(error, null, 2));
+
+        // Only redirect to settings if account doesn't exist (404)
+        // For other errors, show them in console but don't redirect
+        if (
+          error?.message?.includes("404") ||
+          error?.message?.includes("Not Found")
+        ) {
+          console.log("No finance account found, redirecting to settings");
+          window.location.href = "/settings";
+        } else {
+          // For other errors, just log and stay on page
+          console.error("Error loading finance data (not redirecting):", error);
+          alert(
+            `Error loading finance data: ${error?.message || "Unknown error"}. Check console for details.`,
+          );
+        }
       }
-    } else {
-      setFinanceData(data);
     }
+    loadFinanceData();
   }, []);
 
+  // Load calendar data from API
   useEffect(() => {
-    if (financeData) {
-      generateCalendar();
-    }
-  }, [financeData, currentDate]);
-
-  const generateCalendar = () => {
     if (!financeData) return;
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    const loadCalendarData = async () => {
+      try {
+        const balanceAsOfDateStr = financeData.account.balanceAsOfDate;
+        const [y, m, d] = balanceAsOfDateStr.split("-").map(Number);
 
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+        const balanceAsOfDate = new Date(y, m - 1, d);
 
-    // Parse the balance as of date
-    const [balanceYear, balanceMonth, balanceDay] =
-      financeData.account.balanceAsOfDate.split("-").map(Number);
-    const balanceAsOfDate = new Date(balanceYear, balanceMonth - 1, balanceDay);
+        const startDate = new Date(
+          balanceAsOfDate.getFullYear(),
+          balanceAsOfDate.getMonth(),
+          1,
+        );
 
-    const days: CalendarDay[] = [];
-    let runningBalance = financeData.account.startingBalance;
+        const endDate = new Date(balanceAsOfDate);
+        endDate.setFullYear(endDate.getFullYear() + 2);
 
-    for (let i = 0; i < 42; i++) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
+        const startDateStr = startDate.toISOString().split("T")[0];
+        const endDateStr = endDate.toISOString().split("T")[0];
 
-      // Only calculate for dates on or after the balance date
-      const shouldCalculate = date >= balanceAsOfDate;
-
-      const dayBills = shouldCalculate
-        ? financeData.recurringBills.filter((bill) => {
-            const isCorrectDay = bill.dueDay === date.getDate();
-            const isPaidOff =
-              bill.total && bill.amountPaid && bill.amountPaid >= bill.total;
-            return isCorrectDay && !isPaidOff;
-          })
-        : [];
-
-      const dayPaychecks = shouldCalculate
-        ? financeData.paychecks.filter((pc) => {
-            const [year, month, day] = pc.date.split("-").map(Number);
-            const pcDate = new Date(year, month - 1, day);
-            return pcDate.toDateString() === date.toDateString();
-          })
-        : [];
-
-      const dayExpenses = shouldCalculate
-        ? financeData.expenses.filter((exp) => {
-            const [year, month, day] = exp.date.split("-").map(Number);
-            const expDate = new Date(year, month - 1, day);
-            return expDate.toDateString() === date.toDateString();
-          })
-        : [];
-
-      // Calculate balance changes only for dates on or after balance date
-      if (shouldCalculate) {
-        dayPaychecks.forEach((pc) => (runningBalance += pc.amount));
-        dayBills.forEach((bill) => {
-          runningBalance -= bill.amount;
-          if (bill.total) {
-            const updatedPaid = (bill.amountPaid || 0) + bill.amount;
-            bill.amountPaid = updatedPaid;
-          }
-        });
-        dayExpenses.forEach((exp) => (runningBalance -= exp.amount));
+        const calendarData = await getCalendarData(
+          startDateStr,
+          endDateStr,
+          24,
+        );
+        setAllCalendarDays(calendarData);
+      } catch (error) {
+        console.error("Failed to load calendar data:", error);
       }
+    };
 
-      days.push({
-        date,
-        isCurrentMonth: date.getMonth() === month,
-        bills: dayBills,
-        paychecks: dayPaychecks,
-        expenses: dayExpenses,
-        runningBalance: shouldCalculate ? runningBalance : 0,
+    loadCalendarData();
+  }, [financeData, currentDate, monthsToShow]);
+
+  const handleAddBill = async () => {
+    try {
+      const bill = {
+        name: billForm.name,
+        amount: Number.parseFloat(billForm.amount),
+        dueDay: Number.parseInt(billForm.dueDay),
+        category: billForm.category,
+        color: getColorForCategory(billForm.category),
+        ...(billForm.total && {
+          total: Number.parseFloat(billForm.total),
+          amountPaid: 0,
+        }),
+      };
+      await addRecurringBill(bill);
+      const data = await getFinanceData();
+      setFinanceData(data);
+      setBillForm({
+        name: "",
+        amount: "",
+        dueDay: "",
+        category: "Utilities",
+        total: "",
       });
+      setBillDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to add bill:", error);
     }
-
-    setCalendarDays(days);
   };
 
-  const handleAddBill = () => {
-    const bill: RecurringBill = {
-      id: Date.now().toString(),
-      name: billForm.name,
-      amount: Number.parseFloat(billForm.amount),
-      dueDay: Number.parseInt(billForm.dueDay),
-      category: billForm.category,
-      color: getColorForCategory(billForm.category),
-      ...(billForm.total && {
-        total: Number.parseFloat(billForm.total),
-        amountPaid: 0,
-      }),
-    };
-    addRecurringBill(bill);
-    setFinanceData(getFinanceData());
-    setBillForm({
-      name: "",
-      amount: "",
-      dueDay: "",
-      category: "Utilities",
-      total: "",
-    });
-    setBillDialogOpen(false);
+  const handleAddPaycheck = async () => {
+    try {
+      const paycheck = {
+        amount: Number.parseFloat(paycheckForm.amount),
+        date: paycheckForm.date,
+        frequency: paycheckForm.frequency,
+      };
+
+      await propagatePaychecks(paycheck);
+
+      const data = await getFinanceData();
+      setFinanceData(data);
+      setPaycheckForm({ amount: "", date: "", frequency: "biweekly" });
+      setPaycheckDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to add paycheck:", error);
+    }
   };
 
-  const handleAddPaycheck = () => {
-    const paycheck: Paycheck = {
-      id: Date.now().toString(),
-      amount: Number.parseFloat(paycheckForm.amount),
-      date: paycheckForm.date,
-      frequency: paycheckForm.frequency,
-    };
-
-    propagatePaychecks(paycheck, paycheckForm.date);
-
-    setFinanceData(getFinanceData());
-    setPaycheckForm({ amount: "", date: "", frequency: "biweekly" });
-    setPaycheckDialogOpen(false);
+  const handleAddExpense = async () => {
+    try {
+      const expense = {
+        name: expenseForm.name,
+        amount: Number.parseFloat(expenseForm.amount),
+        date: expenseForm.date,
+        category: expenseForm.category,
+      };
+      await addExpense(expense);
+      const data = await getFinanceData();
+      setFinanceData(data);
+      setExpenseForm({ name: "", amount: "", date: "", category: "Groceries" });
+      setExpenseDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to add expense:", error);
+    }
   };
 
-  const handleAddExpense = () => {
-    const expense: Expense = {
-      id: Date.now().toString(),
-      name: expenseForm.name,
-      amount: Number.parseFloat(expenseForm.amount),
-      date: expenseForm.date,
-      category: expenseForm.category,
-    };
-    addExpense(expense);
-    setFinanceData(getFinanceData());
-    setExpenseForm({ name: "", amount: "", date: "", category: "Groceries" });
-    setExpenseDialogOpen(false);
-  };
-
-  const handleCSVImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCSVImport = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split("\n").filter((line) => line.trim());
-
-      const dataLines = lines.slice(1);
-
-      dataLines.forEach((line) => {
-        const [description, dueDate, monthlyCost, remaining] = line
-          .split(",")
-          .map((s) => s.trim());
-
-        if (!description || !dueDate || !monthlyCost) return;
-
-        let dueDay: number;
-        if (dueDate.includes("/")) {
-          const parts = dueDate.split("/");
-          dueDay = Number.parseInt(parts[1] || parts[0]);
-        } else {
-          dueDay = Number.parseInt(dueDate);
-        }
-
-        if (isNaN(dueDay) || dueDay < 1 || dueDay > 31) return;
-
-        const amount = Number.parseFloat(monthlyCost);
-        if (isNaN(amount)) return;
-
-        const bill: RecurringBill = {
-          id: `${Date.now()}-${Math.random()}`,
-          name: description,
-          amount,
-          dueDay,
-          category: "Other",
-          color: getColorForCategory("Other"),
-        };
-
-        if (remaining && remaining !== "") {
-          const totalRemaining = Number.parseFloat(remaining);
-          if (!isNaN(totalRemaining) && totalRemaining > 0) {
-            bill.total = totalRemaining;
-            bill.amountPaid = 0;
-          }
-        }
-
-        addRecurringBill(bill);
-      });
-
-      setFinanceData(getFinanceData());
+    try {
+      await importCSV(file);
+      const data = await getFinanceData();
+      setFinanceData(data);
       event.target.value = "";
-    };
-
-    reader.readAsText(file);
+    } catch (error) {
+      console.error("Failed to import CSV:", error);
+      alert(
+        "Failed to import CSV. Please check the file format and try again.",
+      );
+      event.target.value = "";
+    }
   };
 
   const getColorForCategory = (category: string) => {
@@ -322,19 +260,209 @@ export default function DashboardPage() {
     );
   };
 
-  const handleDeleteBill = (id: string) => {
-    deleteRecurringBill(id);
-    setFinanceData(getFinanceData());
+  // Get the days to display based on current view
+  const getDisplayDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    return allCalendarDays.filter((day) => {
+      const dayYear = day.date.getFullYear();
+      const dayMonth = day.date.getMonth();
+
+      // Check if day is within the selected month range
+      for (let i = 0; i < monthsToShow; i++) {
+        const targetDate = new Date(year, month + i, 1);
+        if (
+          dayYear === targetDate.getFullYear() &&
+          dayMonth === targetDate.getMonth()
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
   };
 
-  const handleDeletePaycheck = (id: string) => {
-    deletePaycheck(id);
-    setFinanceData(getFinanceData());
+  const calendarDays = getDisplayDays();
+
+  const handleDeleteBill = async (id: number) => {
+    try {
+      await deleteRecurringBill(id);
+      const data = await getFinanceData();
+      setFinanceData(data);
+    } catch (error) {
+      console.error("Failed to delete bill:", error);
+    }
   };
 
-  const handleDeleteExpense = (id: string) => {
-    deleteExpense(id);
-    setFinanceData(getFinanceData());
+  const handleDeletePaycheck = async (id: number) => {
+    try {
+      await deletePaycheck(id);
+      const data = await getFinanceData();
+      setFinanceData(data);
+    } catch (error) {
+      console.error("Failed to delete paycheck:", error);
+    }
+  };
+
+  const handleDeleteExpense = async (id: number) => {
+    try {
+      await deleteExpense(id);
+      const data = await getFinanceData();
+      setFinanceData(data);
+    } catch (error) {
+      console.error("Failed to delete expense:", error);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!allCalendarDays.length) return;
+
+    // CSV Header
+    const headers = [
+      "Date",
+      "Day of Week",
+      "Income",
+      "Bills",
+      "Expenses",
+      "Net Change",
+      "Balance",
+      "Details",
+    ];
+
+    // Add summary section
+    const summaryRows: string[][] = [];
+
+    // Calculate monthly summaries
+    for (let i = 0; i < monthsToShow; i++) {
+      const displayMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + i,
+        1,
+      );
+      const monthDays = calendarDays.filter(
+        (day) =>
+          day.date.getMonth() === displayMonth.getMonth() &&
+          day.date.getFullYear() === displayMonth.getFullYear(),
+      );
+
+      const monthIncome = monthDays.reduce(
+        (sum, day) => sum + day.paychecks.reduce((s, pc) => s + pc.amount, 0),
+        0,
+      );
+      const monthBills = monthDays.reduce(
+        (sum, day) => sum + day.bills.reduce((s, b) => s + b.amount, 0),
+        0,
+      );
+      const monthExpenses = monthDays.reduce(
+        (sum, day) => sum + day.expenses.reduce((s, e) => s + e.amount, 0),
+        0,
+      );
+
+      const firstDay = monthDays[0];
+      const lastDay = monthDays[monthDays.length - 1];
+
+      summaryRows.push([
+        displayMonth.toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        }),
+        "",
+        monthIncome.toFixed(2),
+        monthBills.toFixed(2),
+        monthExpenses.toFixed(2),
+        (monthIncome - monthBills - monthExpenses).toFixed(2),
+        lastDay?.runningBalance.toFixed(2) || "0.00",
+        `Start: $${firstDay?.runningBalance.toFixed(2) || "0.00"}, End: $${lastDay?.runningBalance.toFixed(2) || "0.00"}`,
+      ]);
+    }
+
+    const csvSummary = [
+      "MONTHLY SUMMARY",
+      headers.join(","),
+      ...summaryRows.map((row) => row.join(",")),
+      "",
+      "DAILY BREAKDOWN",
+      headers.join(","),
+    ].join("\n");
+
+    // CSV Rows - use only displayed days for export
+    const displayedDays = getDisplayDays();
+    const rows = displayedDays.map((day) => {
+      const dateStr = day.date.toISOString().split("T")[0];
+      const dayOfWeek = day.date.toLocaleDateString("en-US", {
+        weekday: "short",
+      });
+
+      const totalIncome = day.paychecks.reduce((sum, pc) => sum + pc.amount, 0);
+      const totalBills = day.bills.reduce((sum, bill) => sum + bill.amount, 0);
+      const totalExpenses = day.expenses.reduce(
+        (sum, exp) => sum + exp.amount,
+        0,
+      );
+      const netChange = totalIncome - totalBills - totalExpenses;
+
+      // Create details string
+      const details: string[] = [];
+      day.paychecks.forEach((pc) =>
+        details.push(`+$${pc.amount.toFixed(2)} (Paycheck)`),
+      );
+      day.bills.forEach((bill) =>
+        details.push(`-$${bill.amount.toFixed(2)} (${bill.name})`),
+      );
+      day.expenses.forEach((exp) =>
+        details.push(`-$${exp.amount.toFixed(2)} (${exp.name})`),
+      );
+      const detailsStr = details.join("; ");
+
+      return [
+        dateStr,
+        dayOfWeek,
+        totalIncome.toFixed(2),
+        totalBills.toFixed(2),
+        totalExpenses.toFixed(2),
+        netChange.toFixed(2),
+        day.runningBalance.toFixed(2),
+        detailsStr,
+      ];
+    });
+
+    // Combine summary and detailed rows
+    const csvContent = [
+      csvSummary,
+      ...rows.map((row) =>
+        row
+          .map((cell) => {
+            // Escape cells that contain commas
+            if (cell.includes(",") || cell.includes('"')) {
+              return `"${cell.replace(/"/g, '""')}"`;
+            }
+            return cell;
+          })
+          .join(","),
+      ),
+    ].join("\n");
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    const startDate =
+      calendarDays[0]?.date.toISOString().split("T")[0] || "start";
+    const endDate =
+      calendarDays[calendarDays.length - 1]?.date.toISOString().split("T")[0] ||
+      "end";
+
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `balance-report-${startDate}-to-${endDate}.csv`,
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (!financeData) {
@@ -346,7 +474,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-y-scroll h-full">
       <main className="container mx-auto p-6 flex flex-col gap-2">
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -357,17 +485,31 @@ export default function DashboardPage() {
               Track your income, bills, and expenses
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="months-select" className="text-sm font-medium">
+              Show:
+            </Label>
+            <Select
+              value={monthsToShow.toString()}
+              onValueChange={(v) => setMonthsToShow(Number.parseInt(v))}
+            >
+              <SelectTrigger id="months-select" className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 Month</SelectItem>
+                <SelectItem value="2">2 Months</SelectItem>
+                <SelectItem value="3">3 Months</SelectItem>
+                <SelectItem value="4">4 Months</SelectItem>
+                <SelectItem value="5">5 Months</SelectItem>
+                <SelectItem value="6">6 Months</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="container mx-auto flex items-center p-2 bg-card rounded-lg border">
           <div className="flex items-center justify-start gap-2 w-full">
-            <Link to="/priority">
-              <Button size="sm" variant="outline">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Payment Priorities
-              </Button>
-            </Link>
-
             <Dialog open={billDialogOpen} onOpenChange={setBillDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
@@ -647,6 +789,18 @@ export default function DashboardPage() {
               className="hidden"
               onChange={handleCSVImport}
             />
+
+            <Button size="sm" variant="outline" onClick={handleExportCSV}>
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+
+            <Link to="/settings/finance">
+              <Button size="sm" variant="outline">
+                <Settings className="h-4 w-4 mr-2" />
+                Update Balance
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -722,163 +876,211 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5" />
-                {currentDate.toLocaleString("default", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon" onClick={previousMonth}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" onClick={nextMonth}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-2">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div
-                  key={day}
-                  className="text-center font-semibold text-sm text-muted-foreground py-2"
-                >
-                  {day}
-                </div>
-              ))}
+        <div className="space-y-6">
+          {/* Generate a card for each month in the view */}
+          {Array.from(
+            { length: monthsToShow },
+            (_, monthOffset) => monthOffset,
+          ).map((monthOffset) => {
+            const displayMonth = new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth() + monthOffset,
+              1,
+            );
+            const year = displayMonth.getFullYear();
+            const month = displayMonth.getMonth();
+            const firstDayOfMonth = new Date(year, month, 1);
+            const startDay = firstDayOfMonth.getDay();
 
-              {calendarDays.map((day, idx) => {
-                const [balanceYear, balanceMonth, balanceDay] =
-                  financeData.account.balanceAsOfDate.split("-").map(Number);
-                const balanceAsOfDate = new Date(
-                  balanceYear,
-                  balanceMonth - 1,
-                  balanceDay,
-                );
-                const isBeforeBalanceDate = day.date < balanceAsOfDate;
+            // Filter calendar days for this specific month
+            const monthDays = calendarDays.filter(
+              (day) =>
+                day.date.getMonth() === month &&
+                day.date.getFullYear() === year,
+            );
 
-                return (
-                  <div
-                    key={idx}
-                    className={`min-h-24 p-2 border rounded-lg ${
-                      day.isCurrentMonth ? "bg-card" : "bg-muted opacity-50"
-                    } ${
-                      day.date.toDateString() === new Date().toDateString()
-                        ? "ring-2 ring-primary"
-                        : ""
-                    } ${isBeforeBalanceDate ? "opacity-40" : ""}`}
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <span
-                        className={`text-sm font-semibold ${
-                          day.isCurrentMonth
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {day.date.getDate()}
-                      </span>
-                      {day.isCurrentMonth &&
-                        !isBeforeBalanceDate &&
-                        (day.bills.length > 0 ||
-                          day.paychecks.length > 0 ||
-                          day.expenses.length > 0) && (
-                          <span
-                            className={`text-xs font-bold ${
-                              day.runningBalance >= 0
-                                ? "text-primary"
-                                : "text-destructive"
-                            }`}
-                          >
-                            ${day.runningBalance.toFixed(0)}
-                          </span>
-                        )}
-                    </div>
+            // Add padding days for the start of the month
+            const paddingDays = Array(startDay).fill(null);
 
-                    <div className="space-y-1">
-                      {day.paychecks.map((pc) => (
-                        <div
-                          key={pc.id}
-                          className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center justify-between group"
+            return (
+              <Card key={monthOffset}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <CalendarIcon className="h-5 w-5" />
+                      {displayMonth.toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </CardTitle>
+                    {monthOffset === 0 && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={previousMonth}
                         >
-                          <span className="font-medium truncate">
-                            +${pc.amount.toFixed(0)}
-                          </span>
-                          <button
-                            onClick={() => handleDeletePaycheck(pc.id)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-
-                      {day.bills.map((bill) => (
-                        <div
-                          key={bill.id}
-                          className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded group"
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={nextMonth}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium truncate">
-                                {bill.name}
-                              </div>
-                              <div className="text-[10px]">
-                                -${bill.amount.toFixed(0)}
-                              </div>
-                              {bill.total && (
-                                <div className="text-[10px] font-semibold">
-                                  ${bill.amountPaid?.toFixed(0) || 0} / $
-                                  {bill.total.toFixed(0)}
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => handleDeleteBill(bill.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-
-                      {day.expenses.map((exp) => (
-                        <div
-                          key={exp.id}
-                          className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded group"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium truncate">
-                                {exp.name}
-                              </div>
-                              <div className="text-[10px]">
-                                -${exp.amount.toFixed(0)}
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => handleDeleteExpense(exp.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-7 gap-2">
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                      (day) => (
+                        <div
+                          key={day}
+                          className="text-center font-semibold text-sm text-muted-foreground py-2"
+                        >
+                          {day}
+                        </div>
+                      ),
+                    )}
+
+                    {/* Render padding days */}
+                    {paddingDays.map((_, idx) => (
+                      <div key={`padding-${idx}`} className="min-h-24" />
+                    ))}
+
+                    {/* Render actual days */}
+                    {monthDays.map((day, idx) => {
+                      const balanceAsOfDateStr =
+                        financeData.account.balanceAsOfDate;
+                      const [balanceYear, balanceMonth, balanceDay] =
+                        balanceAsOfDateStr.split("-").map(Number);
+                      const balanceAsOfDateDate = new Date(
+                        balanceYear,
+                        balanceMonth - 1,
+                        balanceDay,
+                      );
+                      const isBeforeBalanceDate =
+                        day.date < balanceAsOfDateDate;
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`min-h-24 p-2 border rounded-lg bg-card ${
+                            day.date.toDateString() ===
+                            new Date().toDateString()
+                              ? "ring-2 ring-primary"
+                              : ""
+                          } ${isBeforeBalanceDate ? "opacity-40" : ""}`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-sm font-semibold text-foreground">
+                              {day.date.getDate()}
+                            </span>
+                            {!isBeforeBalanceDate &&
+                              (day.bills.length > 0 ||
+                                day.paychecks.length > 0 ||
+                                day.expenses.length > 0) && (
+                                <span
+                                  className={`text-xs font-bold ${
+                                    day.runningBalance >= 0
+                                      ? "text-primary"
+                                      : "text-destructive"
+                                  }`}
+                                >
+                                  ${day.runningBalance.toFixed(0)}
+                                </span>
+                              )}
+                          </div>
+
+                          <div className="space-y-1">
+                            {Array.isArray(day.paychecks) &&
+                              day.paychecks.map((pc) => (
+                                <div
+                                  key={pc.id}
+                                  className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center justify-between group"
+                                >
+                                  <span className="font-medium truncate">
+                                    +${pc.amount.toFixed(0)}
+                                  </span>
+                                  <button
+                                    onClick={() => handleDeletePaycheck(pc.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ))}
+
+                            {Array.isArray(day.bills) &&
+                              day.bills.map((bill) => (
+                                <div
+                                  key={bill.id}
+                                  className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded group"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <div className="font-medium truncate">
+                                        {bill.name}
+                                      </div>
+                                      <div className="text-[10px]">
+                                        -${bill.amount.toFixed(0)}
+                                      </div>
+                                      {bill.total && (
+                                        <div className="text-[10px] font-semibold">
+                                          ${bill.amountPaid?.toFixed(0) || 0} /
+                                          ${bill.total.toFixed(0)}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <button
+                                      onClick={() => handleDeleteBill(bill.id)}
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+
+                            {Array.isArray(day.expenses) &&
+                              day.expenses.map((exp) => (
+                                <div
+                                  key={exp.id}
+                                  className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded group"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <div className="font-medium truncate">
+                                        {exp.name}
+                                      </div>
+                                      <div className="text-[10px]">
+                                        -${exp.amount.toFixed(0)}
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteExpense(exp.id)
+                                      }
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </main>
     </div>
   );

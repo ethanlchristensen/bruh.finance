@@ -16,6 +16,7 @@ from .schemas import (
     UserUpdateSchema,
 )
 
+
 @api_controller("/users", auth=JWTAuth(), tags=["Users"])
 class UserController:
     def _add_full_image_url(self, request, user):

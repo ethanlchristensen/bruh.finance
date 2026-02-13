@@ -1,7 +1,7 @@
 import * as React from "react";
-import { MessageCircle, ChartBarBig, TrendingUp, Settings } from "lucide-react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-
+import { ChartBarBig, TrendingUp } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import { NavUser } from "@/components/sidebar/nav-user";
 import {
   Sidebar,
@@ -18,7 +18,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/",
       icon: ChartBarBig,
       isActive: true,
     },
@@ -33,7 +33,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const activeItem = React.useMemo(
     () =>
@@ -76,20 +76,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
-          {
+          {user && 
             <NavUser
-              user={{
-                id: 101,
-                username: "john_doe",
-                email: "john.doe@example.com",
-                first_name: "John",
-                last_name: "Doe",
-                profile: {
-                  bio: "Passionate software engineer with a love for open source and clean code.",
-                  profile_image:
-                    "https://example.com/images/john_doe_profile.jpg",
-                },
-              }}
+              user={user}
             />
           }
         </SidebarFooter>

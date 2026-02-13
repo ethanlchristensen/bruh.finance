@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { initializeAccount } from "@/lib/finance-storage";
+import { initializeAccount } from "@/lib/finance-api";
 
 export default function SetupPage() {
   const [balance, setBalance] = useState("");
@@ -23,10 +23,15 @@ export default function SetupPage() {
     return today.toISOString().split("T")[0];
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    initializeAccount(Number.parseFloat(balance) || 0, balanceDate);
-    window.location.href = "/dashboard";
+    try {
+      await initializeAccount(Number.parseFloat(balance) || 0, balanceDate);
+      window.location.href = "/dashboard";
+    } catch (error) {
+      console.error("Failed to initialize account:", error);
+      alert("Failed to set up account. Please try again.");
+    }
   };
 
   return (
