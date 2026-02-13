@@ -59,7 +59,7 @@ function normalizeAccount(account: FinanceAccount): FinanceAccount {
 
 // API Functions
 export async function getFinanceData() {
-  const data = await api.get<FinanceData>("/finance/");
+  const data = await api.get<FinanceData>("/finance");
   return {
     ...data,
     account: normalizeAccount(data.account),
@@ -88,9 +88,9 @@ export async function getCalendarData(startDate: string, endDate: string, months
 export async function initializeAccount(startingBalance: number, balanceAsOfDate: string) {
   // Get existing account first if it exists to preserve required fields
   try {
-    const existingAccount = await api.get<FinanceAccount>("/finance/account/");
+    const existingAccount = await api.get<FinanceAccount>("/finance/account");
     // Update with all required fields
-    const response = await api.patch<FinanceAccount>("/finance/account/", {
+    const response = await api.patch<FinanceAccount>("/finance/account", {
       starting_balance: startingBalance,
       current_balance: startingBalance,
       balance_as_of_date: balanceAsOfDate,
@@ -99,7 +99,7 @@ export async function initializeAccount(startingBalance: number, balanceAsOfDate
     return normalizeAccount(response);
   } catch (error) {
     console.error("Error:", error);
-    const response = await api.patch<FinanceAccount>("/finance/account/", {
+    const response = await api.patch<FinanceAccount>("/finance/account", {
       starting_balance: startingBalance,
       current_balance: startingBalance,
       balance_as_of_date: balanceAsOfDate,
@@ -109,13 +109,13 @@ export async function initializeAccount(startingBalance: number, balanceAsOfDate
 }
 
 export async function getAccount() {
-  const response = await api.get<FinanceAccount>("/finance/account/");
+  const response = await api.get<FinanceAccount>("/finance/account");
   return normalizeAccount(response);
 }
 
 export async function updateAccount(account: Partial<FinanceAccount>) {
   // Get existing account first to ensure we have all required fields
-  const existingAccount = await api.get<FinanceAccount>("/finance/account/");
+  const existingAccount = await api.get<FinanceAccount>("/finance/account");
   
   // Merge the updates with existing data to satisfy backend validation
   // Backend expects snake_case for the payload, but we're using camelCase in this function signature
@@ -132,7 +132,7 @@ export async function updateAccount(account: Partial<FinanceAccount>) {
   
   // Need to use the API directly to control the payload format
   const response = await api.patch<FinanceAccount>(
-    "/finance/account/",
+    "/finance/account",
     updatePayload
   );
   return normalizeAccount(response);
@@ -141,7 +141,7 @@ export async function updateAccount(account: Partial<FinanceAccount>) {
 // Recurring Bills
 export async function addRecurringBill(bill: Omit<RecurringBill, "id">) {
   const response = await api.post<RecurringBill>(
-    "/finance/recurring-bills/",
+    "/finance/recurring-bills",
     bill
   );
   return response;
@@ -149,20 +149,20 @@ export async function addRecurringBill(bill: Omit<RecurringBill, "id">) {
 
 export async function updateRecurringBill(id: number, bill: Partial<RecurringBill>) {
   const response = await api.patch<RecurringBill>(
-    `/finance/recurring-bills/${id}/`,
+    `/finance/recurring-bills/${id}`,
     bill
   );
   return response;
 }
 
 export async function deleteRecurringBill(id: number) {
-  await api.delete(`/finance/recurring-bills/${id}/`);
+  await api.delete(`/finance/recurring-bills/${id}`);
 }
 
 // Paychecks
 export async function addPaycheck(paycheck: Omit<Paycheck, "id">) {
   const response = await api.post<Paycheck>(
-    "/finance/paychecks/",
+    "/finance/paychecks",
     paycheck
   );
   return response;
@@ -173,13 +173,13 @@ export async function propagatePaychecks(paycheck: Omit<Paycheck, "id">) {
 }
 
 export async function deletePaycheck(id: number) {
-  await api.delete(`/finance/paychecks/${id}/`);
+  await api.delete(`/finance/paychecks/${id}`);
 }
 
 // Expenses
 export async function addExpense(expense: Omit<Expense, "id">) {
   const response = await api.post<Expense>(
-    "/finance/expenses/",
+    "/finance/expenses",
     expense
   );
   return response;
@@ -187,14 +187,14 @@ export async function addExpense(expense: Omit<Expense, "id">) {
 
 export async function updateExpense(id: number, expense: Partial<Expense>) {
   const response = await api.patch<Expense>(
-    `/finance/expenses/${id}/`,
+    `/finance/expenses/${id}`,
     expense
   );
   return response;
 }
 
 export async function deleteExpense(id: number) {
-  await api.delete(`/finance/expenses/${id}/`);
+  await api.delete(`/finance/expenses/${id}`);
 }
 
 // CSV Import/Export
