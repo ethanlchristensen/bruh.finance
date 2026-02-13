@@ -14,7 +14,6 @@ import { Route as AuthRouteImport } from './app/routes/_auth'
 import { Route as ProtectedIndexRouteImport } from './app/routes/_protected/index'
 import { Route as ProtectedSettingsRouteImport } from './app/routes/_protected/settings'
 import { Route as ProtectedProfileRouteImport } from './app/routes/_protected/profile'
-import { Route as ProtectedPriorityRouteImport } from './app/routes/_protected/priority'
 import { Route as ProtectedDashboardRouteImport } from './app/routes/_protected/dashboard'
 import { Route as AuthRegisterRouteImport } from './app/routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './app/routes/_auth/login'
@@ -43,11 +42,6 @@ const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedPriorityRoute = ProtectedPriorityRouteImport.update({
-  id: '/priority',
-  path: '/priority',
-  getParentRoute: () => ProtectedRoute,
-} as any)
 const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -74,7 +68,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/dashboard': typeof ProtectedDashboardRoute
-  '/priority': typeof ProtectedPriorityRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRouteWithChildren
   '/': typeof ProtectedIndexRoute
@@ -84,7 +77,6 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/dashboard': typeof ProtectedDashboardRoute
-  '/priority': typeof ProtectedPriorityRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRouteWithChildren
   '/': typeof ProtectedIndexRoute
@@ -97,7 +89,6 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
-  '/_protected/priority': typeof ProtectedPriorityRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/settings': typeof ProtectedSettingsRouteWithChildren
   '/_protected/': typeof ProtectedIndexRoute
@@ -109,7 +100,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard'
-    | '/priority'
     | '/profile'
     | '/settings'
     | '/'
@@ -119,7 +109,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard'
-    | '/priority'
     | '/profile'
     | '/settings'
     | '/'
@@ -131,7 +120,6 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/register'
     | '/_protected/dashboard'
-    | '/_protected/priority'
     | '/_protected/profile'
     | '/_protected/settings'
     | '/_protected/'
@@ -178,13 +166,6 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProtectedProfileRouteImport
-      parentRoute: typeof ProtectedRoute
-    }
-    '/_protected/priority': {
-      id: '/_protected/priority'
-      path: '/priority'
-      fullPath: '/priority'
-      preLoaderRoute: typeof ProtectedPriorityRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/dashboard': {
@@ -243,7 +224,6 @@ const ProtectedSettingsRouteWithChildren =
 
 interface ProtectedRouteChildren {
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
-  ProtectedPriorityRoute: typeof ProtectedPriorityRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRouteWithChildren
   ProtectedIndexRoute: typeof ProtectedIndexRoute
@@ -251,7 +231,6 @@ interface ProtectedRouteChildren {
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedDashboardRoute: ProtectedDashboardRoute,
-  ProtectedPriorityRoute: ProtectedPriorityRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRouteWithChildren,
   ProtectedIndexRoute: ProtectedIndexRoute,
