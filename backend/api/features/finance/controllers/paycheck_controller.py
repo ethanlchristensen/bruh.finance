@@ -21,7 +21,7 @@ class PaycheckController:
     def create_paycheck(self, request, data: PaycheckSchema):
         """Create a new paycheck"""
         paycheck = Paycheck.objects.create(
-            user=request.user, **data.dict(exclude_unset=True, exclude={"id"}, by_alias=False)
+            user=request.user, **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
         )
         return 201, paycheck
 
@@ -29,7 +29,7 @@ class PaycheckController:
     def update_paycheck(self, request, paycheck_id: int, data: PaycheckSchema):
         """Update a paycheck"""
         paycheck = Paycheck.objects.get(id=paycheck_id, user=request.user)
-        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=False).items():
+        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=True).items():
             setattr(paycheck, attr, value)
         paycheck.save()
         return paycheck
