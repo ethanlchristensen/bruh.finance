@@ -1,0 +1,34 @@
+name: Deploy to Raspberry Pi
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: [self-hosted, linux, arm64, RPI5]
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy configuration files
+        run: |
+          echo "Copying environment files..."
+          cp /home/ethan/source/repos/bruh.finance/.env.container ./.env
+          cp /home/ethan/source/repos/bruh.finance/backend/config.json ./backend/config.json
+          cp /home/ethan/source/repos/bruh.finance/frontend/.env ./frontend/.env
+
+      - name: Deploy with Docker Compose
+        run: |
+          echo "Stopping existing prod services (if any)..."
+          docker compose down bruh.finance --remove-orphans
+          echo "Building and starting prod services..."
+          docker compose up bruh.finance -d --build 
+          echo "Cleaning up old Docker images..."
+          docker image prune -af
