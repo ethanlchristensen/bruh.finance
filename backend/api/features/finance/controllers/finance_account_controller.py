@@ -6,13 +6,13 @@ from api.features.finance.schemas import FinanceAccountSchema
 
 @api_controller("/finance/account", auth=JWTAuth(), tags=["Finance Account"])
 class FinanceAccountController:
-    @route.get("/", response=FinanceAccountSchema)
+    @route.get("", response=FinanceAccountSchema)
     def get_account(self, request):
         """Get current user's finance account"""
         account = FinanceAccount.objects.get(user=request.user)
         return account
 
-    @route.patch("/", response=FinanceAccountSchema)
+    @route.patch("", response=FinanceAccountSchema)
     def update_account(self, request, data: FinanceAccountSchema):
         """Update current user's finance account"""
         account = FinanceAccount.objects.get(user=request.user)

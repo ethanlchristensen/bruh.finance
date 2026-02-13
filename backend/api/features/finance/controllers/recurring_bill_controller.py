@@ -7,7 +7,7 @@ from api.features.finance.schemas import RecurringBillSchema
 
 @api_controller("/finance/recurring-bills", auth=JWTAuth(), tags=["Recurring Bills"])
 class RecurringBillController:
-    @route.get("/", response=List[RecurringBillSchema])
+    @route.get("", response=List[RecurringBillSchema])
     def list_bills(self, request):
         """List all recurring bills for current user"""
         return RecurringBill.objects.filter(user=request.user)
@@ -17,7 +17,7 @@ class RecurringBillController:
         """Get a specific recurring bill"""
         return RecurringBill.objects.get(id=bill_id, user=request.user)
 
-    @route.post("/", response={201: RecurringBillSchema, 400: dict})
+    @route.post("", response={201: RecurringBillSchema, 400: dict})
     def create_bill(self, request, data: RecurringBillSchema):
         """Create a new recurring bill"""
         bill = RecurringBill.objects.create(

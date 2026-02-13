@@ -6,7 +6,7 @@ from api.features.finance.schemas import FinanceDataSchema
 
 @api_controller("/finance", auth=JWTAuth(), tags=["Finance Data"])
 class FinanceDataController:
-    @route.get("/", response=FinanceDataSchema)
+    @route.get("", response=FinanceDataSchema)
     def get_all_finance_data(self, request):
         """Get all finance data for current user"""
         account = FinanceAccount.objects.get(user=request.user)

@@ -7,7 +7,7 @@ from api.features.finance.schemas import ExpenseSchema
 
 @api_controller("/finance/expenses", auth=JWTAuth(), tags=["Expenses"])
 class ExpenseController:
-    @route.get("/", response=List[ExpenseSchema])
+    @route.get("", response=List[ExpenseSchema])
     def list_expenses(self, request):
         """List all expenses for current user"""
         return Expense.objects.filter(user=request.user)
@@ -17,7 +17,7 @@ class ExpenseController:
         """Get a specific expense"""
         return Expense.objects.get(id=expense_id, user=request.user)
 
-    @route.post("/", response={201: ExpenseSchema, 400: dict})
+    @route.post("", response={201: ExpenseSchema, 400: dict})
     def create_expense(self, request, data: ExpenseSchema):
         """Create a new expense"""
         expense = Expense.objects.create(

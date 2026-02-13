@@ -7,7 +7,7 @@ from api.features.finance.schemas import PaycheckSchema
 
 @api_controller("/finance/paychecks", auth=JWTAuth(), tags=["Paychecks"])
 class PaycheckController:
-    @route.get("/", response=List[PaycheckSchema])
+    @route.get("", response=List[PaycheckSchema])
     def list_paychecks(self, request):
         """List all paychecks for current user"""
         return Paycheck.objects.filter(user=request.user)
@@ -17,7 +17,7 @@ class PaycheckController:
         """Get a specific paycheck"""
         return Paycheck.objects.get(id=paycheck_id, user=request.user)
 
-    @route.post("/", response={201: PaycheckSchema, 400: dict})
+    @route.post("", response={201: PaycheckSchema, 400: dict})
     def create_paycheck(self, request, data: PaycheckSchema):
         """Create a new paycheck"""
         paycheck = Paycheck.objects.create(
