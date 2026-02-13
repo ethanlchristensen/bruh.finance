@@ -37,6 +37,7 @@ class PaycheckSchema(Schema):
     frequency: str
     dayOfWeek: Optional[int] = Field(default=None, alias='day_of_week')
     dayOfMonth: Optional[int] = Field(default=None, alias='day_of_month')
+    secondDayOfMonth: Optional[int] = Field(default=None, alias='second_day_of_month')
     
     class Config:
         populate_by_name = True

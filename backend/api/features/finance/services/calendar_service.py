@@ -197,28 +197,34 @@ class CalendarService:
             return days_diff >= 0 and days_diff % 14 == 0
         
         elif frequency == 'bimonthly':
-            # Occurs twice a month on specific days (e.g., 1st and 15th)
-            # Use the start date day as the first day, and (start day + 15) % 30 as second day approximately
-            first_day = paycheck.date.day
-            second_day = first_day + 15
+            # Occurs twice a month
+            # First payment is on the primary date (day_of_month or date.day)
+            first_day = paycheck.day_of_month if paycheck.day_of_month else paycheck.date.day
             
-            # If second day pushes into next month or late in month, adjust logic
-            # Standard "twice a month" logic is usually 1st & 15th, or 15th & 30th
-            if first_day > 15:
-                # If started late in month, assume the other date is roughly -15 days
-                second_day = first_day - 15
-            
-            # Check if today is one of the payment days
-            if target_date.day == first_day or target_date.day == second_day:
-                # Handle end of month edge cases for 31st vs 30th etc if needed
-                return True
-                
-            # Handle month-end specific logic if days are near 30/31
+            # Second payment is on second_day_of_month if provided, otherwise assume ~15 days later
+            if hasattr(paycheck, 'second_day_of_month') and paycheck.second_day_of_month:
+                second_day = paycheck.second_day_of_month
+            else:
+                # Default logic: 1st & 15th, or 15th & Last Day
+                if first_day <= 15:
+                    second_day = first_day + 15
+                else:
+                    # If first day is > 15 (e.g. 20th), maybe second day is next month? 
+                    # Or maybe user meant 5th & 20th.
+                    # Without explicit second day, let's assume -15 days for the "earlier" payment in the month
+                    second_day = first_day - 15
+
+            # Get last day of current target month
             last_day_of_month = (date(target_date.year, target_date.month % 12 + 1, 1) - timedelta(days=1)).day
-            if second_day > last_day_of_month and target_date.day == last_day_of_month:
-                return True
-                
-            return False
+            
+            # Check matches
+            is_first_day = (target_date.day == first_day) or \
+                          (first_day > last_day_of_month and target_date.day == last_day_of_month)
+            
+            is_second_day = (target_date.day == second_day) or \
+                           (second_day > last_day_of_month and target_date.day == last_day_of_month)
+
+            return (is_first_day or is_second_day) and target_date >= paycheck.date
         
         elif frequency == 'monthly':
             # Occurs on the same day each month

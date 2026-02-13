@@ -26,6 +26,7 @@ export interface Paycheck {
   frequency: string;
   dayOfWeek?: number | null;
   dayOfMonth?: number | null;
+  secondDayOfMonth?: number | null;
 }
 
 export interface Expense {

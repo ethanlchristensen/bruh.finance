@@ -34,6 +34,7 @@ class Paycheck(models.Model):
     frequency = models.CharField(max_length=255)  # "weekly", "biweekly", etc.
     day_of_week = models.IntegerField(null=True, blank=True)  # 0-6 for weekly
     day_of_month = models.IntegerField(null=True, blank=True)  # 1-31 for monthly
+    second_day_of_month = models.IntegerField(null=True, blank=True)  # 1-31 for bimonthly
 
     def __str__(self):
         return f"{self.user.username}'s Paycheck on {self.date}"

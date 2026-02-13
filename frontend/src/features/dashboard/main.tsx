@@ -72,7 +72,8 @@ export default function DashboardPage() {
   const [paycheckForm, setPaycheckForm] = useState({
     amount: "",
     date: "",
-    frequency: "biweekly" as const,
+    frequency: "biweekly" as string,
+    secondDay: "",
   });
   const [expenseForm, setExpenseForm] = useState({
     name: "",
@@ -186,13 +187,14 @@ export default function DashboardPage() {
         amount: Number.parseFloat(paycheckForm.amount),
         date: paycheckForm.date,
         frequency: paycheckForm.frequency,
+        ...(paycheckForm.secondDay && { secondDayOfMonth: Number.parseInt(paycheckForm.secondDay) }),
       };
 
       await propagatePaychecks(paycheck);
 
       const data = await getFinanceData();
       setFinanceData(data);
-      setPaycheckForm({ amount: "", date: "", frequency: "biweekly" });
+      setPaycheckForm({ amount: "", date: "", frequency: "biweekly", secondDay: "" });
       setPaycheckDialogOpen(false);
     } catch (error) {
       console.error("Failed to add paycheck:", error);
@@ -681,6 +683,30 @@ export default function DashboardPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {paycheckForm.frequency === "bimonthly" && (
+                    <div>
+                      <Label htmlFor="secondDay">Second Payday (Optional)</Label>
+                      <Input
+                        id="secondDay"
+                        type="number"
+                        min="1"
+                        max="31"
+                        placeholder="Leave blank to use +15 days"
+                        value={paycheckForm.secondDay}
+                        onChange={(e) =>
+                          setPaycheckForm({
+                            ...paycheckForm,
+                            secondDay: e.target.value,
+                          })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        First payday is set by the "Start Date". This sets the second payday of the month.
+                      </p>
+                    </div>
+                  )}
+
                   <Button onClick={handleAddPaycheck} className="w-full">
                     Add Paycheck
                   </Button>
