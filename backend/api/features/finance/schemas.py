@@ -49,6 +49,10 @@ class ExpenseSchema(Schema):
     amount: float
     date: date
     category: str
+    relatedBillId: Optional[int] = Field(default=None, alias='related_bill_id')
+
+    class Config:
+        populate_by_name = True
 
 
 class FinanceDataSchema(Schema):
@@ -103,6 +107,7 @@ class CalendarExpenseSchema(Schema):
     amount: float
     date: str
     category: str
+    relatedBillId: Optional[int] = None
 
 
 class CalendarDaySchema(Schema):

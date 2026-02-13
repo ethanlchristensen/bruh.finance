@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import datetime, date
 from django.contrib.auth.models import User
 from ninja.files import UploadedFile
-from api.features.finance.models import RecurringBill
+from api.features.finance.models import RecurringBill, FinanceAccount
 from api.features.finance.services.calendar_service import CalendarService
 
 
@@ -56,9 +56,11 @@ class CSVService:
             except (ValueError, InvalidOperation):
                 continue
             
-            # Create bill object
+                        # Create bill object
+            finance_account = FinanceAccount.objects.get(user=user)
             bill_data = {
                 'user': user,
+                'finance_account': finance_account,
                 'name': description,
                 'amount': amount,
                 'due_day': due_day,

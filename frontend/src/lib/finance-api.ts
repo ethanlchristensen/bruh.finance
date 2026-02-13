@@ -35,6 +35,7 @@ export interface Expense {
   amount: number;
   date: string;
   category: string;
+  relatedBillId?: number | null;
 }
 
 export interface FinanceData {

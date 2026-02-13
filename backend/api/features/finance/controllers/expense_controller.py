@@ -1,7 +1,7 @@
 from typing import List
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
-from api.features.finance.models import Expense
+from api.features.finance.models import Expense, FinanceAccount
 from api.features.finance.schemas import ExpenseSchema
 
 
@@ -20,8 +20,11 @@ class ExpenseController:
     @route.post("", response={201: ExpenseSchema, 400: dict})
     def create_expense(self, request, data: ExpenseSchema):
         """Create a new expense"""
+        finance_account = FinanceAccount.objects.get(user=request.user)
         expense = Expense.objects.create(
-            user=request.user, **data.dict(exclude_unset=True, exclude={"id"}, by_alias=False)
+            user=request.user,
+            finance_account=finance_account,
+            **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
         )
         return 201, expense
 
@@ -29,7 +32,7 @@ class ExpenseController:
     def update_expense(self, request, expense_id: int, data: ExpenseSchema):
         """Update an expense"""
         expense = Expense.objects.get(id=expense_id, user=request.user)
-        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=False).items():
+        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=True).items():
             setattr(expense, attr, value)
         expense.save()
         return expense

@@ -63,7 +63,7 @@ class CalendarService:
             day_paychecks = self._get_paychecks_for_date(paychecks, current_date) if should_calculate else []
             day_expenses = self._get_expenses_for_date(expenses, current_date) if should_calculate else []
 
-            # Calculate balance changes
+                        # Calculate balance changes
             if should_calculate:
                 for pc in day_paychecks:
                     running_balance += pc.amount
@@ -74,7 +74,22 @@ class CalendarService:
                         bill_payments[bill.id] = bill_payments.get(bill.id, Decimal('0.00')) + bill.amount
                 
                 for exp in day_expenses:
+                    # Subtract expense amount from running balance
                     running_balance -= exp.amount
+                    
+                    # If this expense is related to a bill (e.g. paying off a credit card),
+                    # we should also apply it towards that bill's total payment if applicable.
+                    # This logic assumes the 'expense' represents the payment being made.
+                    if hasattr(exp, 'related_bill') and exp.related_bill:
+                        # Find the bill in our bill_payments tracker
+                        related_bill_id = exp.related_bill.id
+                        if related_bill_id in bill_payments:
+                             # This assumes the expense amount counts towards paying off the bill
+                             bill_payments[related_bill_id] += exp.amount
+                        elif exp.related_bill.total:
+                             # Initialize tracking for this bill if we haven't seen it due yet but paying it early?
+                             # Or if it was just missed in initial scan (unlikely if passed in bills list)
+                             bill_payments[related_bill_id] = exp.amount
 
             calendar_days.append({
                 'date': current_date.isoformat(),

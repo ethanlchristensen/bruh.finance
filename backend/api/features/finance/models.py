@@ -15,6 +15,7 @@ class FinanceAccount(models.Model):
 
 class RecurringBill(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recurring_bills")
+    finance_account = models.ForeignKey(FinanceAccount, on_delete=models.CASCADE, related_name="recurring_bills", null=True, blank=True)
     name = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     due_day = models.IntegerField()
@@ -29,6 +30,7 @@ class RecurringBill(models.Model):
 
 class Paycheck(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="paychecks")
+    finance_account = models.ForeignKey(FinanceAccount, on_delete=models.CASCADE, related_name="paychecks", null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()
     frequency = models.CharField(max_length=255)  # "weekly", "biweekly", etc.
@@ -42,10 +44,12 @@ class Paycheck(models.Model):
 
 class Expense(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="expenses")
+    finance_account = models.ForeignKey(FinanceAccount, on_delete=models.CASCADE, related_name="expenses", null=True, blank=True)
     name = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()
     category = models.CharField(max_length=255)
+    related_bill = models.ForeignKey(RecurringBill, on_delete=models.SET_NULL, null=True, blank=True, related_name="expenses")
 
     def __str__(self):
         return f"{self.user.username}'s {self.name} on {self.date}"

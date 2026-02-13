@@ -1,7 +1,7 @@
 from typing import List
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
-from api.features.finance.models import Paycheck
+from api.features.finance.models import Paycheck, FinanceAccount
 from api.features.finance.schemas import PaycheckSchema
 
 
@@ -20,8 +20,11 @@ class PaycheckController:
     @route.post("", response={201: PaycheckSchema, 400: dict})
     def create_paycheck(self, request, data: PaycheckSchema):
         """Create a new paycheck"""
+        finance_account = FinanceAccount.objects.get(user=request.user)
         paycheck = Paycheck.objects.create(
-            user=request.user, **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
+            user=request.user,
+            finance_account=finance_account,
+            **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
         )
         return 201, paycheck
 

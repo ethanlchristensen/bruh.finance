@@ -80,6 +80,7 @@ export default function DashboardPage() {
     amount: "",
     date: "",
     category: "Groceries",
+    relatedBillId: "none",
   });
 
   useEffect(() => {
@@ -208,11 +209,14 @@ export default function DashboardPage() {
         amount: Number.parseFloat(expenseForm.amount),
         date: expenseForm.date,
         category: expenseForm.category,
+        ...(expenseForm.relatedBillId !== "none" && {
+          relatedBillId: Number.parseInt(expenseForm.relatedBillId),
+        }),
       };
       await addExpense(expense);
       const data = await getFinanceData();
       setFinanceData(data);
-      setExpenseForm({ name: "", amount: "", date: "", category: "Groceries" });
+      setExpenseForm({ name: "", amount: "", date: "", category: "Groceries", relatedBillId: "none" });
       setExpenseDialogOpen(false);
     } catch (error) {
       console.error("Failed to add expense:", error);
@@ -792,6 +796,32 @@ export default function DashboardPage() {
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="relatedBill">Apply Towards Bill (Optional)</Label>
+                    <Select
+                      value={expenseForm.relatedBillId}
+                      onValueChange={(v) =>
+                        setExpenseForm({ ...expenseForm, relatedBillId: v })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {financeData?.recurringBills
+                          .filter((bill) => bill.total) // Only show bills that have a total amount to pay off
+                          .map((bill) => (
+                            <SelectItem key={bill.id} value={bill.id.toString()}>
+                              {bill.name} (Total: ${bill.total})
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      If this expense is a payment towards a debt/bill (like a credit card), select it here to update the remaining balance.
+                    </p>
                   </div>
                   <Button onClick={handleAddExpense} className="w-full">
                     Add Expense

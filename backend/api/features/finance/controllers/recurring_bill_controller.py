@@ -1,7 +1,7 @@
 from typing import List
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
-from api.features.finance.models import RecurringBill
+from api.features.finance.models import RecurringBill, FinanceAccount
 from api.features.finance.schemas import RecurringBillSchema
 
 
@@ -20,8 +20,11 @@ class RecurringBillController:
     @route.post("", response={201: RecurringBillSchema, 400: dict})
     def create_bill(self, request, data: RecurringBillSchema):
         """Create a new recurring bill"""
+        finance_account = FinanceAccount.objects.get(user=request.user)
         bill = RecurringBill.objects.create(
-            user=request.user, **data.dict(exclude_unset=True, exclude={"id"}, by_alias=False)
+            user=request.user, 
+            finance_account=finance_account,
+            **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
         )
         return 201, bill
 
@@ -29,7 +32,7 @@ class RecurringBillController:
     def update_bill(self, request, bill_id: int, data: RecurringBillSchema):
         """Update a recurring bill"""
         bill = RecurringBill.objects.get(id=bill_id, user=request.user)
-        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=False).items():
+        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=True).items():
             setattr(bill, attr, value)
         bill.save()
         return bill
