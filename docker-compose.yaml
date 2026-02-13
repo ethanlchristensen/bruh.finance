@@ -28,7 +28,7 @@ services:
         - VITE_APP_BACKEND_API_VERSION=${VITE_APP_BACKEND_API_VERSION:-api}
     restart: unless-stopped
     ports:
-      - "5176:80"
+      - "5177:80"
       - "8446:443"
     depends_on:
       - bruhfinancebackend
