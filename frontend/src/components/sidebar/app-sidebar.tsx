@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChartBarBig, TrendingUp } from "lucide-react";
+import { ChartBarBig } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -21,13 +21,7 @@ const data = {
       url: "/",
       icon: ChartBarBig,
       isActive: true,
-    },
-    {
-      title: "Priority",
-      url: "/priority",
-      icon: TrendingUp,
-      isActive: false,
-    },
+    }
   ],
 };
 
