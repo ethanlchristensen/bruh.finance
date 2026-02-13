@@ -196,25 +196,28 @@ class CalendarService:
             days_diff = (target_date - paycheck.date).days
             return days_diff >= 0 and days_diff % 14 == 0
         
-        elif frequency == 'semi-monthly':
+        elif frequency == 'bimonthly':
             # Occurs twice a month on specific days (e.g., 1st and 15th)
-            if paycheck.day_of_month:
-                # Typically occurs on day_of_month and 15 days later
-                first_day = paycheck.day_of_month
-                second_day = first_day + 15 if first_day + 15 <= 31 else first_day - 15
+            # Use the start date day as the first day, and (start day + 15) % 30 as second day approximately
+            first_day = paycheck.date.day
+            second_day = first_day + 15
+            
+            # If second day pushes into next month or late in month, adjust logic
+            # Standard "twice a month" logic is usually 1st & 15th, or 15th & 30th
+            if first_day > 15:
+                # If started late in month, assume the other date is roughly -15 days
+                second_day = first_day - 15
+            
+            # Check if today is one of the payment days
+            if target_date.day == first_day or target_date.day == second_day:
+                # Handle end of month edge cases for 31st vs 30th etc if needed
+                return True
                 
-                # Handle months with fewer days
-                if target_date.month == 2:
-                    last_day = 29 if target_date.year % 4 == 0 and (target_date.year % 100 != 0 or target_date.year % 400 == 0) else 28
-                elif target_date.month in [4, 6, 9, 11]:
-                    last_day = 30
-                else:
-                    last_day = 31
+            # Handle month-end specific logic if days are near 30/31
+            last_day_of_month = (date(target_date.year, target_date.month % 12 + 1, 1) - timedelta(days=1)).day
+            if second_day > last_day_of_month and target_date.day == last_day_of_month:
+                return True
                 
-                first_day = min(first_day, last_day)
-                second_day = min(second_day, last_day)
-                
-                return (target_date.day == first_day or target_date.day == second_day) and target_date >= paycheck.date
             return False
         
         elif frequency == 'monthly':
