@@ -12,12 +12,16 @@ class ExpenseController:
     @route.get("", response=List[ExpenseSchema])
     def list_expenses(self, request):
         """List all expenses for current user"""
-        return Expense.objects.filter(user=request.user).select_related("category")
+        return Expense.objects.filter(user=request.user, is_deleted=False).select_related(
+            "category"
+        )
 
     @route.get("/{expense_id}", response=ExpenseSchema)
     def get_expense(self, request, expense_id: int):
         """Get a specific expense"""
-        return Expense.objects.select_related("category").get(id=expense_id, user=request.user)
+        return Expense.objects.select_related("category").get(
+            id=expense_id, user=request.user, is_deleted=False
+        )
 
     @route.post("", response={201: ExpenseSchema, 400: dict})
     def create_expense(self, request, data: ExpenseSchema):
@@ -48,13 +52,12 @@ class ExpenseController:
 
         for attr, value in payload.items():
             setattr(expense, attr, value)
-
         expense.save()
         return expense
 
     @route.delete("/{expense_id}", response={204: None})
     def delete_expense(self, request, expense_id: int):
-        """Delete an expense"""
+        """Soft delete an expense"""
         expense = Expense.objects.get(id=expense_id, user=request.user)
-        expense.delete()
+        expense.soft_delete()
         return 204, None

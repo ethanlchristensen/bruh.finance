@@ -37,9 +37,15 @@ class CalendarService:
             calc_end_date = end_date
 
         # Get all data
-        bills = list(RecurringBill.objects.filter(user=user).select_related("category"))
-        paychecks = list(Paycheck.objects.filter(user=user).select_related("category"))
-        expenses = list(Expense.objects.filter(user=user).select_related("category"))
+        bills = list(
+            RecurringBill.objects.filter(user=user, is_deleted=False).select_related("category")
+        )
+        paychecks = list(
+            Paycheck.objects.filter(user=user, is_deleted=False).select_related("category")
+        )
+        expenses = list(
+            Expense.objects.filter(user=user, is_deleted=False).select_related("category")
+        )
 
         # Track bill payments for bills with totals
         bill_payments = {}

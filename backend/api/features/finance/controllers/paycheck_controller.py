@@ -12,12 +12,16 @@ class PaycheckController:
     @route.get("", response=List[PaycheckSchema])
     def list_paychecks(self, request):
         """List all paychecks for current user"""
-        return Paycheck.objects.filter(user=request.user).select_related("category")
+        return Paycheck.objects.filter(user=request.user, is_deleted=False).select_related(
+            "category"
+        )
 
     @route.get("/{paycheck_id}", response=PaycheckSchema)
     def get_paycheck(self, request, paycheck_id: int):
         """Get a specific paycheck"""
-        return Paycheck.objects.select_related("category").get(id=paycheck_id, user=request.user)
+        return Paycheck.objects.select_related("category").get(
+            id=paycheck_id, user=request.user, is_deleted=False
+        )
 
     @route.post("", response={201: PaycheckSchema, 400: dict})
     def create_paycheck(self, request, data: PaycheckSchema):
@@ -48,13 +52,12 @@ class PaycheckController:
 
         for attr, value in payload.items():
             setattr(paycheck, attr, value)
-
         paycheck.save()
         return paycheck
 
     @route.delete("/{paycheck_id}", response={204: None})
     def delete_paycheck(self, request, paycheck_id: int):
-        """Delete a paycheck"""
+        """Soft delete a paycheck"""
         paycheck = Paycheck.objects.get(id=paycheck_id, user=request.user)
-        paycheck.delete()
+        paycheck.soft_delete()
         return 204, None

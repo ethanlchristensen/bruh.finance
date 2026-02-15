@@ -10,6 +10,8 @@ class FinanceAccountSchema(Schema):
     currentBalance: float = Field(alias="current_balance")
     balanceAsOfDate: date = Field(alias="balance_as_of_date")
     createdAt: Optional[datetime] = Field(default=None, alias="created_at")
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
 
     class Config:
         populate_by_name = True
@@ -20,6 +22,11 @@ class CategorySchema(Schema):
     name: str
     type: str
     color: str
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
+
+    class Config:
+        populate_by_name = True
 
 
 class RecurringBillSchema(Schema):
@@ -31,6 +38,8 @@ class RecurringBillSchema(Schema):
     category_id: Optional[int] = None
     total: Optional[float] = None
     amountPaid: Optional[float] = Field(default=None, alias="amount_paid")
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
 
     class Config:
         populate_by_name = True
@@ -46,6 +55,8 @@ class PaycheckSchema(Schema):
     secondDayOfMonth: Optional[int] = Field(default=None, alias="second_day_of_month")
     category: Optional[CategorySchema] = None
     category_id: Optional[int] = None
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
 
     class Config:
         populate_by_name = True
@@ -59,6 +70,8 @@ class ExpenseSchema(Schema):
     category: Optional[CategorySchema] = None
     category_id: Optional[int] = None
     relatedBillId: Optional[int] = Field(default=None, alias="related_bill_id")
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
 
     class Config:
         populate_by_name = True

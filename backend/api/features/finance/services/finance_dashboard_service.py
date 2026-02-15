@@ -15,9 +15,9 @@ class FinanceDashboardService:
         except FinanceAccount.DoesNotExist:
             raise ValueError("No finance account found for user")
 
-        expenses = Expense.objects.filter(user=user).order_by("date")
-        paychecks = Paycheck.objects.filter(user=user).order_by("date")
-        bills = RecurringBill.objects.filter(user=user).order_by("due_day")
+        expenses = Expense.objects.filter(user=user, is_deleted=False).order_by("date")
+        paychecks = Paycheck.objects.filter(user=user, is_deleted=False).order_by("date")
+        bills = RecurringBill.objects.filter(user=user, is_deleted=False).order_by("due_day")
 
         return {
             "account": {
@@ -101,12 +101,14 @@ class FinanceDashboardService:
 
     def _calculate_monthly_income(self, user: User, start_date: date, end_date: date) -> Decimal:
         """Calculate total income for a date range"""
-        paychecks = Paycheck.objects.filter(user=user, date__gte=start_date, date__lte=end_date)
+        paychecks = Paycheck.objects.filter(
+            user=user, date__gte=start_date, date__lte=end_date, is_deleted=False
+        )
         return sum(pc.amount for pc in paychecks) or Decimal("0.00")
 
     def _calculate_monthly_bills(self, user: User, start_date: date, end_date: date) -> Decimal:
         """Calculate total bills for a date range"""
-        bills = RecurringBill.objects.filter(user=user)
+        bills = RecurringBill.objects.filter(user=user, is_deleted=False)
         total = Decimal("0.00")
 
         # Calculate how many times each bill occurs in the date range
@@ -126,5 +128,7 @@ class FinanceDashboardService:
 
     def _calculate_monthly_expenses(self, user: User, start_date: date, end_date: date) -> Decimal:
         """Calculate total expenses for a date range"""
-        expenses = Expense.objects.filter(user=user, date__gte=start_date, date__lte=end_date)
+        expenses = Expense.objects.filter(
+            user=user, date__gte=start_date, date__lte=end_date, is_deleted=False
+        )
         return sum(exp.amount for exp in expenses) or Decimal("0.00")

@@ -11,9 +11,9 @@ class FinanceDataController:
     def get_all_finance_data(self, request):
         """Get all finance data for current user"""
         account = FinanceAccount.objects.get(user=request.user)
-        recurring_bills = RecurringBill.objects.filter(user=request.user)
-        paychecks = Paycheck.objects.filter(user=request.user)
-        expenses = Expense.objects.filter(user=request.user)
+        recurring_bills = RecurringBill.objects.filter(user=request.user, is_deleted=False)
+        paychecks = Paycheck.objects.filter(user=request.user, is_deleted=False)
+        expenses = Expense.objects.filter(user=request.user, is_deleted=False)
 
         return {
             "account": account,

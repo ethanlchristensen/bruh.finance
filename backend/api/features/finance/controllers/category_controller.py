@@ -12,7 +12,7 @@ class CategoryController:
     @route.get("", response=List[CategorySchema])
     def list_categories(self, request):
         """List all categories for current user"""
-        return Category.objects.filter(user=request.user)
+        return Category.objects.filter(user=request.user, is_deleted=False)
 
     @route.get("/choices", response=CategoryChoicesSchema)
     def get_choices(self, request):
@@ -26,7 +26,7 @@ class CategoryController:
     @route.get("/{category_id}", response=CategorySchema)
     def get_category(self, request, category_id: int):
         """Get a specific category"""
-        return Category.objects.get(id=category_id, user=request.user)
+        return Category.objects.get(id=category_id, user=request.user, is_deleted=False)
 
     @route.post("", response={201: CategorySchema, 400: dict})
     def create_category(self, request, data: CategorySchema):
@@ -47,7 +47,7 @@ class CategoryController:
 
     @route.delete("/{category_id}", response={204: None})
     def delete_category(self, request, category_id: int):
-        """Delete a category"""
+        """Soft delete a category"""
         category = Category.objects.get(id=category_id, user=request.user)
-        category.delete()
+        category.soft_delete()
         return 204, None

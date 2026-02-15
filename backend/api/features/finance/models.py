@@ -1,8 +1,27 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 
-class FinanceAccount(models.Model):
+class SoftDeleteModel(models.Model):
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+
+    def restore(self):
+        self.is_deleted = False
+        self.deleted_at = None
+        self.save()
+
+
+class FinanceAccount(SoftDeleteModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="finance_account")
     starting_balance = models.DecimalField(max_digits=10, decimal_places=2)
     current_balance = models.DecimalField(max_digits=10, decimal_places=2)
@@ -42,7 +61,7 @@ CATEGORY_TYPE_CHOICES = [
 ]
 
 
-class Category(models.Model):
+class Category(SoftDeleteModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
     name = models.CharField(max_length=100)
     type = models.CharField(
@@ -67,7 +86,7 @@ class Category(models.Model):
         return f"{self.user.username}'s {self.name} ({self.get_type_display()})"
 
 
-class RecurringBill(models.Model):
+class RecurringBill(SoftDeleteModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recurring_bills")
     finance_account = models.ForeignKey(
         FinanceAccount,
@@ -96,7 +115,7 @@ class RecurringBill(models.Model):
         return f"{self.user.username}'s {self.name}"
 
 
-class Paycheck(models.Model):
+class Paycheck(SoftDeleteModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="paychecks")
     finance_account = models.ForeignKey(
         FinanceAccount, on_delete=models.CASCADE, related_name="paychecks", null=True, blank=True
@@ -121,7 +140,7 @@ class Paycheck(models.Model):
         return f"{self.user.username}'s Paycheck on {self.date}"
 
 
-class Expense(models.Model):
+class Expense(SoftDeleteModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="expenses")
     finance_account = models.ForeignKey(
         FinanceAccount, on_delete=models.CASCADE, related_name="expenses", null=True, blank=True

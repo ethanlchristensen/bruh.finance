@@ -12,12 +12,16 @@ class RecurringBillController:
     @route.get("", response=List[RecurringBillSchema])
     def list_bills(self, request):
         """List all recurring bills for current user"""
-        return RecurringBill.objects.filter(user=request.user).select_related("category")
+        return RecurringBill.objects.filter(user=request.user, is_deleted=False).select_related(
+            "category"
+        )
 
     @route.get("/{bill_id}", response=RecurringBillSchema)
     def get_bill(self, request, bill_id: int):
         """Get a specific recurring bill"""
-        return RecurringBill.objects.select_related("category").get(id=bill_id, user=request.user)
+        return RecurringBill.objects.select_related("category").get(
+            id=bill_id, user=request.user, is_deleted=False
+        )
 
     @route.post("", response={201: RecurringBillSchema, 400: dict})
     def create_bill(self, request, data: RecurringBillSchema):
@@ -48,13 +52,12 @@ class RecurringBillController:
 
         for attr, value in payload.items():
             setattr(bill, attr, value)
-
         bill.save()
         return bill
 
     @route.delete("/{bill_id}", response={204: None})
     def delete_bill(self, request, bill_id: int):
-        """Delete a recurring bill"""
+        """Soft delete a recurring bill"""
         bill = RecurringBill.objects.get(id=bill_id, user=request.user)
-        bill.delete()
+        bill.soft_delete()
         return 204, None
