@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
@@ -44,7 +44,7 @@ export function NavUser({ user }: { user: User }) {
   };
 
   const { data: cachedImageUrl } = useCachedProfileImage(
-    user.profile.profile_image
+    user.profile.profile_image,
   );
 
   const fullName =

@@ -1,15 +1,16 @@
 from ninja_extra import NinjaExtraAPI
 from ninja_jwt.controller import NinjaJWTDefaultController
 
-from api.features.users.controller import AuthController, UserController
 from api.features.finance.controller import (
+    CategoryController,
     ExpenseController,
-    FinanceDataController,
     FinanceAccountController,
-    RecurringBillController,
+    FinanceDashboardController,
+    FinanceDataController,
     PaycheckController,
-    FinanceDashboardController
+    RecurringBillController,
 )
+from api.features.users.controller import AuthController, UserController
 
 api = NinjaExtraAPI()
 
@@ -22,7 +23,8 @@ api.register_controllers(
     FinanceDataController,
     RecurringBillController,
     PaycheckController,
-    FinanceDashboardController
+    FinanceDashboardController,
+    CategoryController,
 )
 
 

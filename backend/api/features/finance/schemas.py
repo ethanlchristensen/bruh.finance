@@ -1,31 +1,37 @@
 from datetime import date, datetime
 from typing import List, Optional
-from decimal import Decimal
 
 from ninja import Schema
 from pydantic import Field
 
 
 class FinanceAccountSchema(Schema):
-    startingBalance: float = Field(alias='starting_balance')
-    currentBalance: float = Field(alias='current_balance')
-    balanceAsOfDate: date = Field(alias='balance_as_of_date')
-    createdAt: Optional[datetime] = Field(default=None, alias='created_at')
-    
+    startingBalance: float = Field(alias="starting_balance")
+    currentBalance: float = Field(alias="current_balance")
+    balanceAsOfDate: date = Field(alias="balance_as_of_date")
+    createdAt: Optional[datetime] = Field(default=None, alias="created_at")
+
     class Config:
         populate_by_name = True
+
+
+class CategorySchema(Schema):
+    id: Optional[int] = None
+    name: str
+    type: str
+    color: str
 
 
 class RecurringBillSchema(Schema):
     id: Optional[int] = None
     name: str
     amount: float
-    dueDay: int = Field(alias='due_day')
-    category: str
-    color: str
+    dueDay: int = Field(alias="due_day")
+    category: Optional[CategorySchema] = None
+    category_id: Optional[int] = None
     total: Optional[float] = None
-    amountPaid: Optional[float] = Field(default=None, alias='amount_paid')
-    
+    amountPaid: Optional[float] = Field(default=None, alias="amount_paid")
+
     class Config:
         populate_by_name = True
 
@@ -35,10 +41,12 @@ class PaycheckSchema(Schema):
     amount: float
     date: date
     frequency: str
-    dayOfWeek: Optional[int] = Field(default=None, alias='day_of_week')
-    dayOfMonth: Optional[int] = Field(default=None, alias='day_of_month')
-    secondDayOfMonth: Optional[int] = Field(default=None, alias='second_day_of_month')
-    
+    dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
+    dayOfMonth: Optional[int] = Field(default=None, alias="day_of_month")
+    secondDayOfMonth: Optional[int] = Field(default=None, alias="second_day_of_month")
+    category: Optional[CategorySchema] = None
+    category_id: Optional[int] = None
+
     class Config:
         populate_by_name = True
 
@@ -48,8 +56,9 @@ class ExpenseSchema(Schema):
     name: str
     amount: float
     date: date
-    category: str
-    relatedBillId: Optional[int] = Field(default=None, alias='related_bill_id')
+    category: Optional[CategorySchema] = None
+    category_id: Optional[int] = None
+    relatedBillId: Optional[int] = Field(default=None, alias="related_bill_id")
 
     class Config:
         populate_by_name = True
@@ -88,8 +97,7 @@ class CalendarBillSchema(Schema):
     name: str
     amount: float
     dueDay: int
-    category: str
-    color: str
+    category: Optional[CategorySchema]
     total: Optional[float] = None
     amountPaid: Optional[float] = None
 
@@ -99,6 +107,7 @@ class CalendarPaycheckSchema(Schema):
     amount: float
     date: str
     frequency: str
+    category: Optional[CategorySchema]
 
 
 class CalendarExpenseSchema(Schema):
@@ -106,7 +115,7 @@ class CalendarExpenseSchema(Schema):
     name: str
     amount: float
     date: str
-    category: str
+    category: Optional[CategorySchema]
     relatedBillId: Optional[int] = None
 
 
@@ -138,3 +147,8 @@ class FinanceDashboardDataSchema(Schema):
     expenses: List[CalendarExpenseSchema]
     paychecks: List[CalendarPaycheckSchema]
     recurringBills: List[CalendarBillSchema]
+
+
+class CategoryChoicesSchema(Schema):
+    colors: List[dict]
+    types: List[dict]

@@ -13,7 +13,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { getAccount, updateAccount, initializeAccount } from "@/lib/finance-api";
+import {
+  getAccount,
+  updateAccount,
+  initializeAccount,
+} from "@/lib/finance-api";
 import { Loader2 } from "lucide-react";
 
 export default function FinanceSettingsPage() {
@@ -48,23 +52,23 @@ export default function FinanceSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
+
     try {
       const balanceNum = Number.parseFloat(balance) || 0;
-      
+
       if (isNewAccount) {
-        console.log('Creating new account...');
+        console.log("Creating new account...");
         await initializeAccount(balanceNum, balanceDate);
       } else {
-        console.log('Updating existing account...');
+        console.log("Updating existing account...");
         const result = await updateAccount({
           currentBalance: balanceNum,
           startingBalance: balanceNum,
           balanceAsOfDate: balanceDate,
         });
-        console.log('Account updated:', result);
+        console.log("Account updated:", result);
       }
-      
+
       window.location.href = "/dashboard";
     } catch (error) {
       console.error("Failed to save account settings:", error);
@@ -90,8 +94,8 @@ export default function FinanceSettingsPage() {
             {isNewAccount ? "Setup Finance Account" : "Update Account Balance"}
           </CardTitle>
           <CardDescription className="text-center">
-            {isNewAccount 
-              ? "Enter your checking account balance to get started" 
+            {isNewAccount
+              ? "Enter your checking account balance to get started"
               : "Update your current balance to recalibrate the dashboard"}
           </CardDescription>
         </CardHeader>
@@ -137,13 +141,13 @@ export default function FinanceSettingsPage() {
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isNewAccount ? "Create Account" : "Update Balance"}
             </Button>
-            
+
             {!isNewAccount && (
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 className="w-full"
-                onClick={() => window.location.href = "/dashboard"}
+                onClick={() => (window.location.href = "/dashboard")}
               >
                 Cancel
               </Button>

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 type EffectiveTheme = "dark" | "light";
 type Theme = EffectiveTheme | "system";
@@ -56,7 +62,9 @@ const initialState: ThemeProviderState = {
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 function getSystemTheme(): EffectiveTheme {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 }
 
 export function ThemeProvider({
@@ -74,15 +82,23 @@ export function ThemeProvider({
   });
 
   const [baseTheme, setBaseThemeState] = useState<BaseTheme>(() => {
-    return (localStorage.getItem(baseThemeStorageKey) as BaseTheme) || defaultBaseTheme;
+    return (
+      (localStorage.getItem(baseThemeStorageKey) as BaseTheme) ||
+      defaultBaseTheme
+    );
   });
 
   const [accentColor, setAccentColorState] = useState<AccentColor>(() => {
-    return (localStorage.getItem(accentColorStorageKey) as AccentColor) || defaultAccentColor;
+    return (
+      (localStorage.getItem(accentColorStorageKey) as AccentColor) ||
+      defaultAccentColor
+    );
   });
 
   // Only needed if you want live updates when theme === "system"
-  const [systemTheme, setSystemTheme] = useState<EffectiveTheme>(() => getSystemTheme());
+  const [systemTheme, setSystemTheme] = useState<EffectiveTheme>(() =>
+    getSystemTheme(),
+  );
 
   useEffect(() => {
     const mql = window.matchMedia("(prefers-color-scheme: dark)");
@@ -169,6 +185,7 @@ export function ThemeProvider({
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
-  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
+  if (context === undefined)
+    throw new Error("useTheme must be used within a ThemeProvider");
   return context;
 };

@@ -36,13 +36,13 @@ export default function ProfileCard() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [initialValues, setInitialValues] = useState({
-    bio: ""
+    bio: "",
   });
 
   useEffect(() => {
     if (user) {
       const values = {
-        bio: user.profile.bio || ""
+        bio: user.profile.bio || "",
       };
       setBio(values.bio);
       setProfileImage(user.profile.profile_image || "");
@@ -97,7 +97,7 @@ export default function ProfileCard() {
       }
 
       setInitialValues({
-        bio
+        bio,
       });
 
       setPreviewUrl(null);

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0002_expense_financeaccount_paycheck_recurringbill'),
+        ("api", "0002_expense_financeaccount_paycheck_recurringbill"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='paycheck',
-            name='second_day_of_month',
+            model_name="paycheck",
+            name="second_day_of_month",
             field=models.IntegerField(blank=True, null=True),
         ),
     ]

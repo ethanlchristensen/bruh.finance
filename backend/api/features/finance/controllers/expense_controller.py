@@ -1,7 +1,9 @@
 from typing import List
+
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
-from api.features.finance.models import Expense, FinanceAccount
+
+from api.features.finance.models import Category, Expense, FinanceAccount
 from api.features.finance.schemas import ExpenseSchema
 
 
@@ -10,21 +12,26 @@ class ExpenseController:
     @route.get("", response=List[ExpenseSchema])
     def list_expenses(self, request):
         """List all expenses for current user"""
-        return Expense.objects.filter(user=request.user)
+        return Expense.objects.filter(user=request.user).select_related("category")
 
     @route.get("/{expense_id}", response=ExpenseSchema)
     def get_expense(self, request, expense_id: int):
         """Get a specific expense"""
-        return Expense.objects.get(id=expense_id, user=request.user)
+        return Expense.objects.select_related("category").get(id=expense_id, user=request.user)
 
     @route.post("", response={201: ExpenseSchema, 400: dict})
     def create_expense(self, request, data: ExpenseSchema):
         """Create a new expense"""
         finance_account = FinanceAccount.objects.get(user=request.user)
+        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+
+        category_id = data.category_id
+        if category_id:
+            category = Category.objects.get(id=category_id, user=request.user)
+            payload["category"] = category
+
         expense = Expense.objects.create(
-            user=request.user,
-            finance_account=finance_account,
-            **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
+            user=request.user, finance_account=finance_account, **payload
         )
         return 201, expense
 
@@ -32,8 +39,16 @@ class ExpenseController:
     def update_expense(self, request, expense_id: int, data: ExpenseSchema):
         """Update an expense"""
         expense = Expense.objects.get(id=expense_id, user=request.user)
-        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=True).items():
+        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+
+        category_id = data.category_id
+        if category_id:
+            category = Category.objects.get(id=category_id, user=request.user)
+            expense.category = category
+
+        for attr, value in payload.items():
             setattr(expense, attr, value)
+
         expense.save()
         return expense
 

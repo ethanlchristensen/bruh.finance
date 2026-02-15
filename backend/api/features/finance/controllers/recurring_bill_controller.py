@@ -1,7 +1,9 @@
 from typing import List
+
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
-from api.features.finance.models import RecurringBill, FinanceAccount
+
+from api.features.finance.models import Category, FinanceAccount, RecurringBill
 from api.features.finance.schemas import RecurringBillSchema
 
 
@@ -10,21 +12,26 @@ class RecurringBillController:
     @route.get("", response=List[RecurringBillSchema])
     def list_bills(self, request):
         """List all recurring bills for current user"""
-        return RecurringBill.objects.filter(user=request.user)
+        return RecurringBill.objects.filter(user=request.user).select_related("category")
 
     @route.get("/{bill_id}", response=RecurringBillSchema)
     def get_bill(self, request, bill_id: int):
         """Get a specific recurring bill"""
-        return RecurringBill.objects.get(id=bill_id, user=request.user)
+        return RecurringBill.objects.select_related("category").get(id=bill_id, user=request.user)
 
     @route.post("", response={201: RecurringBillSchema, 400: dict})
     def create_bill(self, request, data: RecurringBillSchema):
         """Create a new recurring bill"""
         finance_account = FinanceAccount.objects.get(user=request.user)
+        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+
+        category_id = data.category_id
+        if category_id:
+            category = Category.objects.get(id=category_id, user=request.user)
+            payload["category"] = category
+
         bill = RecurringBill.objects.create(
-            user=request.user, 
-            finance_account=finance_account,
-            **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
+            user=request.user, finance_account=finance_account, **payload
         )
         return 201, bill
 
@@ -32,8 +39,16 @@ class RecurringBillController:
     def update_bill(self, request, bill_id: int, data: RecurringBillSchema):
         """Update a recurring bill"""
         bill = RecurringBill.objects.get(id=bill_id, user=request.user)
-        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=True).items():
+        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+
+        category_id = data.category_id
+        if category_id:
+            category = Category.objects.get(id=category_id, user=request.user)
+            bill.category = category
+
+        for attr, value in payload.items():
             setattr(bill, attr, value)
+
         bill.save()
         return bill
 

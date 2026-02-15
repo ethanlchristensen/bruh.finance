@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChartBarBig } from "lucide-react";
+import { ChartBarBig, Receipt, Tags } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -21,7 +21,19 @@ const data = {
       url: "/",
       icon: ChartBarBig,
       isActive: true,
-    }
+    },
+    {
+      title: "Bills",
+      url: "/bills",
+      icon: Receipt,
+      isActive: false,
+    },
+    {
+      title: "Categories",
+      url: "/categories",
+      icon: Tags,
+      isActive: false,
+    },
   ],
 };
 
@@ -69,13 +81,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-          {user && 
-            <NavUser
-              user={user}
-            />
-          }
-        </SidebarFooter>
+        <SidebarFooter>{user && <NavUser user={user} />}</SidebarFooter>
       </Sidebar>
     </>
   );

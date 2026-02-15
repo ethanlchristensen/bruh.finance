@@ -6,18 +6,17 @@ export interface FinanceAccount {
 }
 
 export interface RecurringBill {
-  id: string;
+  id: number;
   name: string;
   amount: number;
   dueDay: number; // day of month (1-31)
-  category: string;
-  color: string;
+  category?: string;
   total?: number; // optional total amount for bills with a payoff amount
   amountPaid?: number; // track how much has been paid
 }
 
 export interface Paycheck {
-  id: string;
+  id: number;
   amount: number;
   date: string; // ISO date string
   frequency: "weekly" | "biweekly" | "bimonthly" | "monthly" | "custom";
@@ -26,7 +25,7 @@ export interface Paycheck {
 }
 
 export interface Expense {
-  id: string;
+  id: number;
   name: string;
   amount: number;
   date: string; // ISO date string

@@ -28,7 +28,10 @@ function ProtectedLayout() {
   const matches = useMatches();
 
   const isChatRoute = matches.some(
-    (match) => match.pathname === "/" || match.pathname.startsWith("/chat/"),
+    (match) =>
+      match.pathname === "/" ||
+      match.pathname.startsWith("/chat/") ||
+      match.pathname.startsWith("/bills"),
   );
 
   useEffect(() => {

@@ -23,7 +23,9 @@ export const ContentLayout = ({
         </div>
       </header>
       {fullHeight ? (
-        <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          {children}
+        </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-auto py-6">
           <div className="mx-auto max-w-10xl px-4 py-6 sm:px-6 md:px-8">

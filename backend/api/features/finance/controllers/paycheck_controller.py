@@ -1,7 +1,9 @@
 from typing import List
+
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
-from api.features.finance.models import Paycheck, FinanceAccount
+
+from api.features.finance.models import Category, FinanceAccount, Paycheck
 from api.features.finance.schemas import PaycheckSchema
 
 
@@ -10,21 +12,26 @@ class PaycheckController:
     @route.get("", response=List[PaycheckSchema])
     def list_paychecks(self, request):
         """List all paychecks for current user"""
-        return Paycheck.objects.filter(user=request.user)
+        return Paycheck.objects.filter(user=request.user).select_related("category")
 
     @route.get("/{paycheck_id}", response=PaycheckSchema)
     def get_paycheck(self, request, paycheck_id: int):
         """Get a specific paycheck"""
-        return Paycheck.objects.get(id=paycheck_id, user=request.user)
+        return Paycheck.objects.select_related("category").get(id=paycheck_id, user=request.user)
 
     @route.post("", response={201: PaycheckSchema, 400: dict})
     def create_paycheck(self, request, data: PaycheckSchema):
         """Create a new paycheck"""
         finance_account = FinanceAccount.objects.get(user=request.user)
+        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+
+        category_id = data.category_id
+        if category_id:
+            category = Category.objects.get(id=category_id, user=request.user)
+            payload["category"] = category
+
         paycheck = Paycheck.objects.create(
-            user=request.user,
-            finance_account=finance_account,
-            **data.dict(exclude_unset=True, exclude={"id"}, by_alias=True)
+            user=request.user, finance_account=finance_account, **payload
         )
         return 201, paycheck
 
@@ -32,8 +39,16 @@ class PaycheckController:
     def update_paycheck(self, request, paycheck_id: int, data: PaycheckSchema):
         """Update a paycheck"""
         paycheck = Paycheck.objects.get(id=paycheck_id, user=request.user)
-        for attr, value in data.dict(exclude_unset=True, exclude={"id"}, by_alias=True).items():
+        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+
+        category_id = data.category_id
+        if category_id:
+            category = Category.objects.get(id=category_id, user=request.user)
+            paycheck.category = category
+
+        for attr, value in payload.items():
             setattr(paycheck, attr, value)
+
         paycheck.save()
         return paycheck
 

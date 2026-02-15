@@ -1,6 +1,8 @@
 import { api } from "./api-client";
 
-// Backend returns camelCase
+// Backend returns camelCase, but the API client will handle the mapping.
+// These interfaces represent the data after it has been transformed to camelCase.
+
 export interface FinanceAccount {
   startingBalance: number;
   currentBalance: number;
@@ -8,13 +10,20 @@ export interface FinanceAccount {
   createdAt?: string;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  type: string;
+  color: string;
+}
+
 export interface RecurringBill {
   id: number;
   name: string;
   amount: number;
   dueDay: number;
-  category: string;
-  color: string;
+  category?: Category | null;
+  category_id?: number | null;
   total?: number | null;
   amountPaid?: number | null;
 }
@@ -27,6 +36,8 @@ export interface Paycheck {
   dayOfWeek?: number | null;
   dayOfMonth?: number | null;
   secondDayOfMonth?: number | null;
+  category?: Category | null;
+  category_id?: number | null;
 }
 
 export interface Expense {
@@ -34,7 +45,8 @@ export interface Expense {
   name: string;
   amount: number;
   date: string;
-  category: string;
+  category?: Category | null;
+  category_id?: number | null;
   relatedBillId?: number | null;
 }
 
@@ -45,13 +57,50 @@ export interface FinanceData {
   expenses: Expense[];
 }
 
+export interface CalendarBill {
+  id: number;
+  name: string;
+  amount: number;
+  dueDay: number;
+  category?: Category | null;
+  total?: number | null;
+  amountPaid?: number | null;
+}
+
+export interface CalendarPaycheck {
+  id: number;
+  amount: number;
+  date: string;
+  frequency: string;
+  category?: Category | null;
+}
+
+export interface CalendarExpense {
+  id: number;
+  name: string;
+  amount: number;
+  date: string;
+  category?: Category | null;
+  relatedBillId?: number | null;
+}
+
 export interface CalendarDay {
   date: string;
   isCurrentMonth: boolean;
-  bills: RecurringBill[];
-  paychecks: Paycheck[];
-  expenses: Expense[];
+  bills: CalendarBill[];
+  paychecks: CalendarPaycheck[];
+  expenses: CalendarExpense[];
   runningBalance: number;
+}
+
+export interface CategoryChoice {
+  value: string;
+  label: string;
+}
+
+export interface CategoryChoices {
+  colors: CategoryChoice[];
+  types: CategoryChoice[];
 }
 
 // Helper function to normalize date/datetime objects from backend
@@ -68,46 +117,45 @@ export async function getFinanceData() {
   };
 }
 
-export async function getCalendarData(startDate: string, endDate: string, monthsToShow: number) {
-  const response = await api.post<CalendarDay[]>("/finance/dashboard/calendar", {
-    startDate: startDate,
-    endDate: endDate,
-    monthsToShow: monthsToShow,
-  });
-  
-  return response.map(day => {
-    const [year, month, dayNum] = day.date.split('-').map(Number);
+export async function getCalendarData(
+  startDate: string,
+  endDate: string,
+  monthsToShow: number,
+) {
+  const response = await api.post<CalendarDay[]>(
+    "/finance/dashboard/calendar",
+    {
+      startDate: startDate,
+      endDate: endDate,
+      monthsToShow: monthsToShow,
+    },
+  );
+
+  return response.map((day) => {
+    const [year, month, dayNum] = day.date.split("-").map(Number);
     const localDate = new Date(year, month - 1, dayNum);
-    
+
     return {
       ...day,
       date: localDate,
-      runningBalance: typeof day.runningBalance === 'number' ? day.runningBalance : parseFloat(day.runningBalance || '0'),
+      runningBalance:
+        typeof day.runningBalance === "number"
+          ? day.runningBalance
+          : parseFloat(day.runningBalance || "0"),
     };
   });
 }
 
-export async function initializeAccount(startingBalance: number, balanceAsOfDate: string) {
-  // Get existing account first if it exists to preserve required fields
-  try {
-    const existingAccount = await api.get<FinanceAccount>("/finance/account");
-    // Update with all required fields
-    const response = await api.patch<FinanceAccount>("/finance/account", {
-      starting_balance: startingBalance,
-      current_balance: startingBalance,
-      balance_as_of_date: balanceAsOfDate,
-      created_at: existingAccount.createdAt,
-    });
-    return normalizeAccount(response);
-  } catch (error) {
-    console.error("Error:", error);
-    const response = await api.patch<FinanceAccount>("/finance/account", {
-      starting_balance: startingBalance,
-      current_balance: startingBalance,
-      balance_as_of_date: balanceAsOfDate,
-    });
-    return normalizeAccount(response);
-  }
+export async function initializeAccount(
+  startingBalance: number,
+  balanceAsOfDate: string,
+) {
+  const response = await api.patch<FinanceAccount>("/finance/account", {
+    startingBalance,
+    currentBalance: startingBalance,
+    balanceAsOfDate,
+  });
+  return normalizeAccount(response);
 }
 
 export async function getAccount() {
@@ -116,43 +164,40 @@ export async function getAccount() {
 }
 
 export async function updateAccount(account: Partial<FinanceAccount>) {
-  // Get existing account first to ensure we have all required fields
-  const existingAccount = await api.get<FinanceAccount>("/finance/account");
-  
-  // Merge the updates with existing data to satisfy backend validation
-  // Backend expects snake_case for the payload, but we're using camelCase in this function signature
-  const updatePayload: any = {
-    starting_balance: account.startingBalance ?? existingAccount.startingBalance,
-    current_balance: account.currentBalance ?? existingAccount.currentBalance,
-    balance_as_of_date: account.balanceAsOfDate ?? existingAccount.balanceAsOfDate,
-  };
-  
-  // Include created_at if it exists
-  if (existingAccount.createdAt) {
-    updatePayload.created_at = existingAccount.createdAt;
-  }
-  
-  // Need to use the API directly to control the payload format
-  const response = await api.patch<FinanceAccount>(
-    "/finance/account",
-    updatePayload
-  );
+  const response = await api.patch<FinanceAccount>("/finance/account", account);
   return normalizeAccount(response);
 }
 
 // Recurring Bills
-export async function addRecurringBill(bill: Omit<RecurringBill, "id">) {
-  const response = await api.post<RecurringBill>(
-    "/finance/recurring-bills",
-    bill
+export async function getRecurringBills() {
+  const response = await api.get<RecurringBill[]>("/finance/recurring-bills");
+  return response;
+}
+
+export async function getRecurringBill(id: number) {
+  const response = await api.get<RecurringBill>(
+    `/finance/recurring-bills/${id}`,
   );
   return response;
 }
 
-export async function updateRecurringBill(id: number, bill: Partial<RecurringBill>) {
+export async function addRecurringBill(
+  bill: Omit<RecurringBill, "id" | "category">,
+) {
+  const response = await api.post<RecurringBill>(
+    "/finance/recurring-bills",
+    bill,
+  );
+  return response;
+}
+
+export async function updateRecurringBill(
+  id: number,
+  bill: Partial<RecurringBill>,
+) {
   const response = await api.patch<RecurringBill>(
     `/finance/recurring-bills/${id}`,
-    bill
+    bill,
   );
   return response;
 }
@@ -162,16 +207,33 @@ export async function deleteRecurringBill(id: number) {
 }
 
 // Paychecks
-export async function addPaycheck(paycheck: Omit<Paycheck, "id">) {
-  const response = await api.post<Paycheck>(
-    "/finance/paychecks",
-    paycheck
-  );
+export async function getPaychecks() {
+  const response = await api.get<Paycheck[]>("/finance/paychecks");
+  return response;
+}
+
+export async function getPaycheck(id: number) {
+  const response = await api.get<Paycheck>(`/finance/paychecks/${id}`);
+  return response;
+}
+
+export async function addPaycheck(paycheck: Omit<Paycheck, "id" | "category">) {
+  const response = await api.post<Paycheck>("/finance/paychecks", paycheck);
   return response;
 }
 
 export async function propagatePaychecks(paycheck: Omit<Paycheck, "id">) {
+  // If the backend doesn't have a specific propagate endpoint, we'll just add the single paycheck.
+  // The calendar service on the backend handles the recurrence for the dashboard view.
   return await addPaycheck(paycheck);
+}
+
+export async function updatePaycheck(id: number, paycheck: Partial<Paycheck>) {
+  const response = await api.patch<Paycheck>(
+    `/finance/paychecks/${id}`,
+    paycheck,
+  );
+  return response;
 }
 
 export async function deletePaycheck(id: number) {
@@ -179,19 +241,23 @@ export async function deletePaycheck(id: number) {
 }
 
 // Expenses
-export async function addExpense(expense: Omit<Expense, "id">) {
-  const response = await api.post<Expense>(
-    "/finance/expenses",
-    expense
-  );
+export async function getExpenses() {
+  const response = await api.get<Expense[]>("/finance/expenses");
+  return response;
+}
+
+export async function getExpense(id: number) {
+  const response = await api.get<Expense>(`/finance/expenses/${id}`);
+  return response;
+}
+
+export async function addExpense(expense: Omit<Expense, "id" | "category">) {
+  const response = await api.post<Expense>("/finance/expenses", expense);
   return response;
 }
 
 export async function updateExpense(id: number, expense: Partial<Expense>) {
-  const response = await api.patch<Expense>(
-    `/finance/expenses/${id}`,
-    expense
-  );
+  const response = await api.patch<Expense>(`/finance/expenses/${id}`, expense);
   return response;
 }
 
@@ -199,26 +265,60 @@ export async function deleteExpense(id: number) {
   await api.delete(`/finance/expenses/${id}`);
 }
 
+// Categories
+export async function getCategories() {
+  const response = await api.get<Category[]>("/finance/categories");
+  return response;
+}
+
+export async function getCategoryChoices() {
+  const response = await api.get<CategoryChoices>(
+    "/finance/categories/choices",
+  );
+  return response;
+}
+
+export async function addCategory(category: Omit<Category, "id">) {
+  const response = await api.post<Category>("/finance/categories", category);
+  return response;
+}
+
+export async function updateCategory(id: number, category: Partial<Category>) {
+  const response = await api.put<Category>(
+    `/finance/categories/${id}`,
+    category,
+  );
+  return response;
+}
+
+export async function deleteCategory(id: number) {
+  await api.delete(`/finance/categories/${id}`);
+}
+
 // CSV Import/Export
 export async function importCSV(file: File) {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const response = await api.post<{
     message: string;
     imported_count: number;
     bills: string[];
   }>("/finance/dashboard/import-csv", formData);
-  
+
   return response;
 }
 
-export async function exportCSV(startDate: string, endDate: string, monthsToShow: number) {
+export async function exportCSV(
+  startDate: string,
+  endDate: string,
+  monthsToShow: number,
+) {
   const response = await api.post<Blob>("/finance/dashboard/export-csv", {
-    start_date: startDate,
-    end_date: endDate,
-    months_to_show: monthsToShow,
+    startDate: startDate,
+    endDate: endDate,
+    monthsToShow: monthsToShow,
   });
-  
+
   return response;
 }

@@ -1,6 +1,7 @@
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
-from api.features.finance.models import FinanceAccount, RecurringBill, Paycheck, Expense
+
+from api.features.finance.models import Expense, FinanceAccount, Paycheck, RecurringBill
 from api.features.finance.schemas import FinanceDataSchema
 
 

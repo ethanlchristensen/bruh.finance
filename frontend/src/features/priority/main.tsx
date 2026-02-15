@@ -64,13 +64,15 @@ export default function PriorityPage() {
         return next;
       }
 
-      if (numAmount > 0) return [...prev, { billId, monthlyExtraPayment: numAmount }];
+      if (numAmount > 0)
+        return [...prev, { billId, monthlyExtraPayment: numAmount }];
       return prev;
     });
   }, []);
 
   const getPriorityAmount = useCallback(
-    (billId: string) => priorities.find((p) => p.billId === billId)?.monthlyExtraPayment || 0,
+    (billId: string) =>
+      priorities.find((p) => p.billId === billId)?.monthlyExtraPayment || 0,
     [priorities],
   );
 
@@ -99,7 +101,8 @@ export default function PriorityPage() {
       while (current <= end) {
         const dayBills = financeData.recurringBills.filter((bill) => {
           const isCorrectDay = bill.dueDay === current.getDate();
-          const isPaidOff = bill.total && bill.amountPaid && bill.amountPaid >= bill.total;
+          const isPaidOff =
+            bill.total && bill.amountPaid && bill.amountPaid >= bill.total;
           return isCorrectDay && !isPaidOff;
         });
 
@@ -119,7 +122,9 @@ export default function PriorityPage() {
 
     const priorityPaymentsAll = priorities
       .map((priority) => {
-        const bill = financeData.recurringBills.find((b) => b.id === priority.billId);
+        const bill = financeData.recurringBills.find(
+          (b) => b.id === priority.billId,
+        );
         if (!bill || !bill.total) return null;
 
         const remaining = bill.total - (bill.amountPaid || 0);
@@ -147,10 +152,20 @@ export default function PriorityPage() {
       const priorityPayments = priorityPaymentsAll;
 
       const totalIncome = currentPaycheck.amount;
-      const totalEssential = billsInPeriod.reduce((sum, b) => sum + b.amount, 0);
-      const totalExpenses = expensesInPeriod.reduce((sum, e) => sum + e.amount, 0);
-      const totalPriority = priorityPayments.reduce((sum, p) => sum + p.amount, 0);
-      const discretionaryAmount = totalIncome - totalEssential - totalExpenses - totalPriority;
+      const totalEssential = billsInPeriod.reduce(
+        (sum, b) => sum + b.amount,
+        0,
+      );
+      const totalExpenses = expensesInPeriod.reduce(
+        (sum, e) => sum + e.amount,
+        0,
+      );
+      const totalPriority = priorityPayments.reduce(
+        (sum, p) => sum + p.amount,
+        0,
+      );
+      const discretionaryAmount =
+        totalIncome - totalEssential - totalExpenses - totalPriority;
 
       periods.push({
         startDate,

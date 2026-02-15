@@ -41,7 +41,10 @@ import {
   deleteExpense,
   getCalendarData,
   importCSV,
+  exportCSV,
+  getCategories,
   type CalendarDay as ApiCalendarDay,
+  type Category,
 } from "@/lib/finance-api";
 
 interface CalendarDay extends Omit<ApiCalendarDay, "date"> {
@@ -55,6 +58,7 @@ export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [allCalendarDays, setAllCalendarDays] = useState<CalendarDay[]>([]); // All calculated days
   const [monthsToShow, setMonthsToShow] = useState(3);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   // Dialog states
   const [billDialogOpen, setBillDialogOpen] = useState(false);
@@ -66,7 +70,7 @@ export default function DashboardPage() {
     name: "",
     amount: "",
     dueDay: "",
-    category: "Utilities",
+    category_id: "",
     total: "",
   });
   const [paycheckForm, setPaycheckForm] = useState({
@@ -79,25 +83,45 @@ export default function DashboardPage() {
     name: "",
     amount: "",
     date: "",
-    category: "Groceries",
+    category_id: "",
     relatedBillId: "none",
   });
 
   useEffect(() => {
-    async function loadFinanceData() {
+    async function loadInitialData() {
       try {
         console.log("Starting to load finance data...");
         const data = await getFinanceData();
         console.log("Finance data loaded successfully:", data);
         setFinanceData(data);
-      } catch (error: any) {
-        console.error("Failed to load finance data:", error);
-        console.error("Error message:", error?.message);
-        console.error("Error type:", typeof error);
-        console.error("Full error object:", JSON.stringify(error, null, 2));
 
-        // Only redirect to settings if account doesn't exist (404)
-        // For other errors, show them in console but don't redirect
+        console.log("Loading categories...");
+        const fetchedCategories = await getCategories();
+        setCategories(fetchedCategories);
+        console.log("Categories loaded:", fetchedCategories);
+
+        if (fetchedCategories.length > 0) {
+          const billCategory = fetchedCategories.find(
+            (cat) => cat.type === "bill" || cat.type === "general",
+          );
+          if (billCategory) {
+            setBillForm((prev) => ({
+              ...prev,
+              category_id: billCategory.id.toString(),
+            }));
+          }
+          const expenseCategory = fetchedCategories.find(
+            (cat) => cat.type === "expense" || cat.type === "general",
+          );
+          if (expenseCategory) {
+            setExpenseForm((prev) => ({
+              ...prev,
+              category_id: expenseCategory.id.toString(),
+            }));
+          }
+        }
+      } catch (error: any) {
+        console.error("Failed to load initial data:", error);
         if (
           error?.message?.includes("404") ||
           error?.message?.includes("Not Found")
@@ -105,15 +129,13 @@ export default function DashboardPage() {
           console.log("No finance account found, redirecting to settings");
           window.location.href = "/settings";
         } else {
-          // For other errors, just log and stay on page
-          console.error("Error loading finance data (not redirecting):", error);
           alert(
             `Error loading finance data: ${error?.message || "Unknown error"}. Check console for details.`,
           );
         }
       }
     }
-    loadFinanceData();
+    loadInitialData();
   }, []);
 
   // Load calendar data from API
@@ -159,8 +181,7 @@ export default function DashboardPage() {
         name: billForm.name,
         amount: Number.parseFloat(billForm.amount),
         dueDay: Number.parseInt(billForm.dueDay),
-        category: billForm.category,
-        color: getColorForCategory(billForm.category),
+        category_id: Number.parseInt(billForm.category_id),
         ...(billForm.total && {
           total: Number.parseFloat(billForm.total),
           amountPaid: 0,
@@ -173,7 +194,10 @@ export default function DashboardPage() {
         name: "",
         amount: "",
         dueDay: "",
-        category: "Utilities",
+        category_id:
+          categories
+            .find((cat) => cat.type === "bill" || cat.type === "general")
+            ?.id.toString() || "",
         total: "",
       });
       setBillDialogOpen(false);
@@ -188,14 +212,21 @@ export default function DashboardPage() {
         amount: Number.parseFloat(paycheckForm.amount),
         date: paycheckForm.date,
         frequency: paycheckForm.frequency,
-        ...(paycheckForm.secondDay && { secondDayOfMonth: Number.parseInt(paycheckForm.secondDay) }),
+        ...(paycheckForm.secondDay && {
+          secondDayOfMonth: Number.parseInt(paycheckForm.secondDay),
+        }),
       };
 
       await propagatePaychecks(paycheck);
 
       const data = await getFinanceData();
       setFinanceData(data);
-      setPaycheckForm({ amount: "", date: "", frequency: "biweekly", secondDay: "" });
+      setPaycheckForm({
+        amount: "",
+        date: "",
+        frequency: "biweekly",
+        secondDay: "",
+      });
       setPaycheckDialogOpen(false);
     } catch (error) {
       console.error("Failed to add paycheck:", error);
@@ -208,7 +239,7 @@ export default function DashboardPage() {
         name: expenseForm.name,
         amount: Number.parseFloat(expenseForm.amount),
         date: expenseForm.date,
-        category: expenseForm.category,
+        category_id: Number.parseInt(expenseForm.category_id),
         ...(expenseForm.relatedBillId !== "none" && {
           relatedBillId: Number.parseInt(expenseForm.relatedBillId),
         }),
@@ -216,7 +247,16 @@ export default function DashboardPage() {
       await addExpense(expense);
       const data = await getFinanceData();
       setFinanceData(data);
-      setExpenseForm({ name: "", amount: "", date: "", category: "Groceries", relatedBillId: "none" });
+      setExpenseForm({
+        name: "",
+        amount: "",
+        date: "",
+        category_id:
+          categories
+            .find((cat) => cat.type === "expense" || cat.type === "general")
+            ?.id.toString() || "",
+        relatedBillId: "none",
+      });
       setExpenseDialogOpen(false);
     } catch (error) {
       console.error("Failed to add expense:", error);
@@ -241,17 +281,6 @@ export default function DashboardPage() {
       );
       event.target.value = "";
     }
-  };
-
-  const getColorForCategory = (category: string) => {
-    const colors: Record<string, string> = {
-      Utilities: "bg-blue-500",
-      Rent: "bg-purple-500",
-      Insurance: "bg-green-500",
-      Subscription: "bg-orange-500",
-      Other: "bg-gray-500",
-    };
-    return colors[category] || "bg-gray-500";
   };
 
   const previousMonth = () => {
@@ -321,154 +350,34 @@ export default function DashboardPage() {
     }
   };
 
-  const handleExportCSV = () => {
-    if (!allCalendarDays.length) return;
+  const handleExportCSV = async () => {
+    if (!calendarDays.length) return;
 
-    // CSV Header
-    const headers = [
-      "Date",
-      "Day of Week",
-      "Income",
-      "Bills",
-      "Expenses",
-      "Net Change",
-      "Balance",
-      "Details",
-    ];
+    try {
+      const startDate =
+        calendarDays[0]?.date.toISOString().split("T")[0] || "start";
+      const endDate =
+        calendarDays[calendarDays.length - 1]?.date
+          .toISOString()
+          .split("T")[0] || "end";
 
-    // Add summary section
-    const summaryRows: string[][] = [];
+      const blob = await exportCSV(startDate, endDate, monthsToShow);
 
-    // Calculate monthly summaries
-    for (let i = 0; i < monthsToShow; i++) {
-      const displayMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + i,
-        1,
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `balance-report-${startDate}-to-${endDate}.csv`,
       );
-      const monthDays = calendarDays.filter(
-        (day) =>
-          day.date.getMonth() === displayMonth.getMonth() &&
-          day.date.getFullYear() === displayMonth.getFullYear(),
-      );
-
-      const monthIncome = monthDays.reduce(
-        (sum, day) => sum + day.paychecks.reduce((s, pc) => s + pc.amount, 0),
-        0,
-      );
-      const monthBills = monthDays.reduce(
-        (sum, day) => sum + day.bills.reduce((s, b) => s + b.amount, 0),
-        0,
-      );
-      const monthExpenses = monthDays.reduce(
-        (sum, day) => sum + day.expenses.reduce((s, e) => s + e.amount, 0),
-        0,
-      );
-
-      const firstDay = monthDays[0];
-      const lastDay = monthDays[monthDays.length - 1];
-
-      summaryRows.push([
-        displayMonth.toLocaleString("default", {
-          month: "long",
-          year: "numeric",
-        }),
-        "",
-        monthIncome.toFixed(2),
-        monthBills.toFixed(2),
-        monthExpenses.toFixed(2),
-        (monthIncome - monthBills - monthExpenses).toFixed(2),
-        lastDay?.runningBalance.toFixed(2) || "0.00",
-        `Start: $${firstDay?.runningBalance.toFixed(2) || "0.00"}, End: $${lastDay?.runningBalance.toFixed(2) || "0.00"}`,
-      ]);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to export CSV:", error);
+      alert("Failed to export CSV report. Please try again.");
     }
-
-    const csvSummary = [
-      "MONTHLY SUMMARY",
-      headers.join(","),
-      ...summaryRows.map((row) => row.join(",")),
-      "",
-      "DAILY BREAKDOWN",
-      headers.join(","),
-    ].join("\n");
-
-    // CSV Rows - use only displayed days for export
-    const displayedDays = getDisplayDays();
-    const rows = displayedDays.map((day) => {
-      const dateStr = day.date.toISOString().split("T")[0];
-      const dayOfWeek = day.date.toLocaleDateString("en-US", {
-        weekday: "short",
-      });
-
-      const totalIncome = day.paychecks.reduce((sum, pc) => sum + pc.amount, 0);
-      const totalBills = day.bills.reduce((sum, bill) => sum + bill.amount, 0);
-      const totalExpenses = day.expenses.reduce(
-        (sum, exp) => sum + exp.amount,
-        0,
-      );
-      const netChange = totalIncome - totalBills - totalExpenses;
-
-      // Create details string
-      const details: string[] = [];
-      day.paychecks.forEach((pc) =>
-        details.push(`+$${pc.amount.toFixed(2)} (Paycheck)`),
-      );
-      day.bills.forEach((bill) =>
-        details.push(`-$${bill.amount.toFixed(2)} (${bill.name})`),
-      );
-      day.expenses.forEach((exp) =>
-        details.push(`-$${exp.amount.toFixed(2)} (${exp.name})`),
-      );
-      const detailsStr = details.join("; ");
-
-      return [
-        dateStr,
-        dayOfWeek,
-        totalIncome.toFixed(2),
-        totalBills.toFixed(2),
-        totalExpenses.toFixed(2),
-        netChange.toFixed(2),
-        day.runningBalance.toFixed(2),
-        detailsStr,
-      ];
-    });
-
-    // Combine summary and detailed rows
-    const csvContent = [
-      csvSummary,
-      ...rows.map((row) =>
-        row
-          .map((cell) => {
-            // Escape cells that contain commas
-            if (cell.includes(",") || cell.includes('"')) {
-              return `"${cell.replace(/"/g, '""')}"`;
-            }
-            return cell;
-          })
-          .join(","),
-      ),
-    ].join("\n");
-
-    // Create and download file
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    const startDate =
-      calendarDays[0]?.date.toISOString().split("T")[0] || "start";
-    const endDate =
-      calendarDays[calendarDays.length - 1]?.date.toISOString().split("T")[0] ||
-      "end";
-
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `balance-report-${startDate}-to-${endDate}.csv`,
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   if (!financeData) {
@@ -589,22 +498,28 @@ export default function DashboardPage() {
                   <div>
                     <Label htmlFor="billCategory">Category</Label>
                     <Select
-                      value={billForm.category}
+                      value={billForm.category_id}
                       onValueChange={(v) =>
-                        setBillForm({ ...billForm, category: v })
+                        setBillForm({ ...billForm, category_id: v })
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Utilities">Utilities</SelectItem>
-                        <SelectItem value="Rent">Rent</SelectItem>
-                        <SelectItem value="Insurance">Insurance</SelectItem>
-                        <SelectItem value="Subscription">
-                          Subscription
-                        </SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        {categories
+                          .filter(
+                            (cat) =>
+                              cat.type === "bill" || cat.type === "general",
+                          )
+                          .map((category) => (
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                            >
+                              {category.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -687,10 +602,12 @@ export default function DashboardPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {paycheckForm.frequency === "bimonthly" && (
                     <div>
-                      <Label htmlFor="secondDay">Second Payday (Optional)</Label>
+                      <Label htmlFor="secondDay">
+                        Second Payday (Optional)
+                      </Label>
                       <Input
                         id="secondDay"
                         type="number"
@@ -706,7 +623,8 @@ export default function DashboardPage() {
                         }
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        First payday is set by the "Start Date". This sets the second payday of the month.
+                        First payday is set by the "Start Date". This sets the
+                        second payday of the month.
                       </p>
                     </div>
                   )}
@@ -777,28 +695,35 @@ export default function DashboardPage() {
                   <div>
                     <Label htmlFor="expenseCategory">Category</Label>
                     <Select
-                      value={expenseForm.category}
+                      value={expenseForm.category_id}
                       onValueChange={(v) =>
-                        setExpenseForm({ ...expenseForm, category: v })
+                        setExpenseForm({ ...expenseForm, category_id: v })
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Groceries">Groceries</SelectItem>
-                        <SelectItem value="Gas">Gas</SelectItem>
-                        <SelectItem value="Eating Out">Eating Out</SelectItem>
-                        <SelectItem value="Shopping">Shopping</SelectItem>
-                        <SelectItem value="Entertainment">
-                          Entertainment
-                        </SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        {categories
+                          .filter(
+                            (cat) =>
+                              cat.type === "expense" || cat.type === "general",
+                          )
+                          .map((category) => (
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                            >
+                              {category.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="relatedBill">Apply Towards Bill (Optional)</Label>
+                    <Label htmlFor="relatedBill">
+                      Apply Towards Bill (Optional)
+                    </Label>
                     <Select
                       value={expenseForm.relatedBillId}
                       onValueChange={(v) =>
@@ -813,14 +738,19 @@ export default function DashboardPage() {
                         {financeData?.recurringBills
                           .filter((bill) => bill.total) // Only show bills that have a total amount to pay off
                           .map((bill) => (
-                            <SelectItem key={bill.id} value={bill.id.toString()}>
+                            <SelectItem
+                              key={bill.id}
+                              value={bill.id.toString()}
+                            >
                               {bill.name} (Total: ${bill.total})
                             </SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground mt-1">
-                      If this expense is a payment towards a debt/bill (like a credit card), select it here to update the remaining balance.
+                      If this expense is a payment towards a debt/bill (like a
+                      credit card), select it here to update the remaining
+                      balance.
                     </p>
                   </div>
                   <Button onClick={handleAddExpense} className="w-full">
@@ -1056,7 +986,7 @@ export default function DashboardPage() {
                               day.paychecks.map((pc) => (
                                 <div
                                   key={pc.id}
-                                  className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center justify-between group"
+                                  className="text-xs bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded flex items-center justify-between group"
                                 >
                                   <span className="font-medium truncate">
                                     +${pc.amount.toFixed(0)}
@@ -1071,62 +1001,83 @@ export default function DashboardPage() {
                               ))}
 
                             {Array.isArray(day.bills) &&
-                              day.bills.map((bill) => (
-                                <div
-                                  key={bill.id}
-                                  className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded group"
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                      <div className="font-medium truncate">
-                                        {bill.name}
-                                      </div>
-                                      <div className="text-[10px]">
-                                        -${bill.amount.toFixed(0)}
-                                      </div>
-                                      {bill.total && (
-                                        <div className="text-[10px] font-semibold">
-                                          ${bill.amountPaid?.toFixed(0) || 0} /
-                                          ${bill.total.toFixed(0)}
+                              day.bills.map((bill) => {
+                                const color =
+                                  bill.category?.color || "gray-500";
+                                const colorVar = `var(--color-${color})`;
+
+                                return (
+                                  <div
+                                    key={bill.id}
+                                    style={{
+                                      color: colorVar,
+                                      backgroundColor: `color-mix(in srgb, ${colorVar}, transparent 90%)`,
+                                    }}
+                                    className="text-xs px-1.5 py-0.5 rounded group mb-1"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="font-medium truncate">
+                                          {bill.name}
                                         </div>
-                                      )}
+                                        <div className="text-[10px]">
+                                          -${bill.amount.toFixed(0)}
+                                        </div>
+                                        {bill.total && (
+                                          <div className="text-[10px] font-semibold">
+                                            ${bill.amountPaid?.toFixed(0) || 0}{" "}
+                                            / ${bill.total.toFixed(0)}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteBill(bill.id)
+                                        }
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
                                     </div>
-                                    <button
-                                      onClick={() => handleDeleteBill(bill.id)}
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
 
                             {Array.isArray(day.expenses) &&
-                              day.expenses.map((exp) => (
-                                <div
-                                  key={exp.id}
-                                  className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded group"
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                      <div className="font-medium truncate">
-                                        {exp.name}
+                              day.expenses.map((exp) => {
+                                const color = exp.category?.color || "gray-500";
+                                const colorVar = `var(--color-${color})`;
+
+                                return (
+                                  <div
+                                    key={exp.id}
+                                    style={{
+                                      color: colorVar,
+                                      backgroundColor: `color-mix(in srgb, ${colorVar}, transparent 90%)`,
+                                    }}
+                                    className="text-xs px-1.5 py-0.5 rounded group mb-1"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="font-medium truncate">
+                                          {exp.name}
+                                        </div>
+                                        <div className="text-[10px]">
+                                          -${exp.amount.toFixed(0)}
+                                        </div>
                                       </div>
-                                      <div className="text-[10px]">
-                                        -${exp.amount.toFixed(0)}
-                                      </div>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteExpense(exp.id)
+                                        }
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
                                     </div>
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteExpense(exp.id)
-                                      }
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                           </div>
                         </div>
                       );
