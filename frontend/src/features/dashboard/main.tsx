@@ -389,8 +389,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-y-scroll h-full">
-      <main className="container mx-auto p-6 flex flex-col gap-2">
+    <div className="min-h-screen bg-background overflow-y-auto">
+      <main className="container mx-auto p-6 flex flex-col gap-2 pb-14">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">

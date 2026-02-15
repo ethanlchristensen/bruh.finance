@@ -27,7 +27,7 @@ class RecurringBillController:
     def create_bill(self, request, data: RecurringBillSchema):
         """Create a new recurring bill"""
         finance_account = FinanceAccount.objects.get(user=request.user)
-        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+        payload = data.dict(exclude_unset=True, by_alias=True, exclude={"id", "category"})
 
         category_id = data.category_id
         if category_id:
@@ -43,7 +43,7 @@ class RecurringBillController:
     def update_bill(self, request, bill_id: int, data: RecurringBillSchema):
         """Update a recurring bill"""
         bill = RecurringBill.objects.get(id=bill_id, user=request.user)
-        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+        payload = data.dict(exclude_unset=True, by_alias=True, exclude={"id", "category"})
 
         category_id = data.category_id
         if category_id:

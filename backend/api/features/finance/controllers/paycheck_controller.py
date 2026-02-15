@@ -27,7 +27,7 @@ class PaycheckController:
     def create_paycheck(self, request, data: PaycheckSchema):
         """Create a new paycheck"""
         finance_account = FinanceAccount.objects.get(user=request.user)
-        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+        payload = data.dict(exclude_unset=True, by_alias=True, exclude={"id", "category"})
 
         category_id = data.category_id
         if category_id:
@@ -43,7 +43,7 @@ class PaycheckController:
     def update_paycheck(self, request, paycheck_id: int, data: PaycheckSchema):
         """Update a paycheck"""
         paycheck = Paycheck.objects.get(id=paycheck_id, user=request.user)
-        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+        payload = data.dict(exclude_unset=True, by_alias=True, exclude={"id", "category"})
 
         category_id = data.category_id
         if category_id:

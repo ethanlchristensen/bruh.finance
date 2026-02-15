@@ -27,7 +27,7 @@ class ExpenseController:
     def create_expense(self, request, data: ExpenseSchema):
         """Create a new expense"""
         finance_account = FinanceAccount.objects.get(user=request.user)
-        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+        payload = data.dict(exclude_unset=True, by_alias=True, exclude={"id", "category"})
 
         category_id = data.category_id
         if category_id:
@@ -43,7 +43,7 @@ class ExpenseController:
     def update_expense(self, request, expense_id: int, data: ExpenseSchema):
         """Update an expense"""
         expense = Expense.objects.get(id=expense_id, user=request.user)
-        payload = data.dict(exclude_unset=True, exclude={"id", "category"})
+        payload = data.dict(exclude_unset=True, by_alias=True, exclude={"id", "category"})
 
         category_id = data.category_id
         if category_id:
