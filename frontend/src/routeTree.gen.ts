@@ -8,265 +8,265 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./app/routes/__root";
-import { Route as ProtectedRouteImport } from "./app/routes/_protected";
-import { Route as AuthRouteImport } from "./app/routes/_auth";
-import { Route as ProtectedIndexRouteImport } from "./app/routes/_protected/index";
-import { Route as ProtectedSettingsRouteImport } from "./app/routes/_protected/settings";
-import { Route as ProtectedProfileRouteImport } from "./app/routes/_protected/profile";
-import { Route as ProtectedDashboardRouteImport } from "./app/routes/_protected/dashboard";
-import { Route as ProtectedCategoriesRouteImport } from "./app/routes/_protected/categories";
-import { Route as ProtectedBillsRouteImport } from "./app/routes/_protected/bills";
-import { Route as AuthRegisterRouteImport } from "./app/routes/_auth/register";
-import { Route as AuthLoginRouteImport } from "./app/routes/_auth/login";
-import { Route as ProtectedSettingsFinanceRouteImport } from "./app/routes/_protected/settings/finance";
+import { Route as rootRouteImport } from './app/routes/__root'
+import { Route as ProtectedRouteImport } from './app/routes/_protected'
+import { Route as AuthRouteImport } from './app/routes/_auth'
+import { Route as ProtectedIndexRouteImport } from './app/routes/_protected/index'
+import { Route as ProtectedSettingsRouteImport } from './app/routes/_protected/settings'
+import { Route as ProtectedProfileRouteImport } from './app/routes/_protected/profile'
+import { Route as ProtectedDashboardRouteImport } from './app/routes/_protected/dashboard'
+import { Route as ProtectedCategoriesRouteImport } from './app/routes/_protected/categories'
+import { Route as ProtectedBillsRouteImport } from './app/routes/_protected/bills'
+import { Route as AuthRegisterRouteImport } from './app/routes/_auth/register'
+import { Route as AuthLoginRouteImport } from './app/routes/_auth/login'
+import { Route as ProtectedSettingsFinanceRouteImport } from './app/routes/_protected/settings/finance'
 
 const ProtectedRoute = ProtectedRouteImport.update({
-  id: "/_protected",
+  id: '/_protected',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AuthRoute = AuthRouteImport.update({
-  id: "/_auth",
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ProtectedIndexRoute = ProtectedIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => ProtectedRoute,
-} as any);
+} as any)
 const ProtectedSettingsRoute = ProtectedSettingsRouteImport.update({
-  id: "/settings",
-  path: "/settings",
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => ProtectedRoute,
-} as any);
+} as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
-  id: "/profile",
-  path: "/profile",
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => ProtectedRoute,
-} as any);
+} as any)
 const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => ProtectedRoute,
-} as any);
+} as any)
 const ProtectedCategoriesRoute = ProtectedCategoriesRouteImport.update({
-  id: "/categories",
-  path: "/categories",
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => ProtectedRoute,
-} as any);
+} as any)
 const ProtectedBillsRoute = ProtectedBillsRouteImport.update({
-  id: "/bills",
-  path: "/bills",
+  id: '/bills',
+  path: '/bills',
   getParentRoute: () => ProtectedRoute,
-} as any);
+} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: "/register",
-  path: "/register",
+  id: '/register',
+  path: '/register',
   getParentRoute: () => AuthRoute,
-} as any);
+} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => AuthRoute,
-} as any);
+} as any)
 const ProtectedSettingsFinanceRoute =
   ProtectedSettingsFinanceRouteImport.update({
-    id: "/finance",
-    path: "/finance",
+    id: '/finance',
+    path: '/finance',
     getParentRoute: () => ProtectedSettingsRoute,
-  } as any);
+  } as any)
 
 export interface FileRoutesByFullPath {
-  "/login": typeof AuthLoginRoute;
-  "/register": typeof AuthRegisterRoute;
-  "/bills": typeof ProtectedBillsRoute;
-  "/categories": typeof ProtectedCategoriesRoute;
-  "/dashboard": typeof ProtectedDashboardRoute;
-  "/profile": typeof ProtectedProfileRoute;
-  "/settings": typeof ProtectedSettingsRouteWithChildren;
-  "/": typeof ProtectedIndexRoute;
-  "/settings/finance": typeof ProtectedSettingsFinanceRoute;
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/bills': typeof ProtectedBillsRoute
+  '/categories': typeof ProtectedCategoriesRoute
+  '/dashboard': typeof ProtectedDashboardRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/settings': typeof ProtectedSettingsRouteWithChildren
+  '/': typeof ProtectedIndexRoute
+  '/settings/finance': typeof ProtectedSettingsFinanceRoute
 }
 export interface FileRoutesByTo {
-  "/login": typeof AuthLoginRoute;
-  "/register": typeof AuthRegisterRoute;
-  "/bills": typeof ProtectedBillsRoute;
-  "/categories": typeof ProtectedCategoriesRoute;
-  "/dashboard": typeof ProtectedDashboardRoute;
-  "/profile": typeof ProtectedProfileRoute;
-  "/settings": typeof ProtectedSettingsRouteWithChildren;
-  "/": typeof ProtectedIndexRoute;
-  "/settings/finance": typeof ProtectedSettingsFinanceRoute;
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/bills': typeof ProtectedBillsRoute
+  '/categories': typeof ProtectedCategoriesRoute
+  '/dashboard': typeof ProtectedDashboardRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/settings': typeof ProtectedSettingsRouteWithChildren
+  '/': typeof ProtectedIndexRoute
+  '/settings/finance': typeof ProtectedSettingsFinanceRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/_auth": typeof AuthRouteWithChildren;
-  "/_protected": typeof ProtectedRouteWithChildren;
-  "/_auth/login": typeof AuthLoginRoute;
-  "/_auth/register": typeof AuthRegisterRoute;
-  "/_protected/bills": typeof ProtectedBillsRoute;
-  "/_protected/categories": typeof ProtectedCategoriesRoute;
-  "/_protected/dashboard": typeof ProtectedDashboardRoute;
-  "/_protected/profile": typeof ProtectedProfileRoute;
-  "/_protected/settings": typeof ProtectedSettingsRouteWithChildren;
-  "/_protected/": typeof ProtectedIndexRoute;
-  "/_protected/settings/finance": typeof ProtectedSettingsFinanceRoute;
+  __root__: typeof rootRouteImport
+  '/_auth': typeof AuthRouteWithChildren
+  '/_protected': typeof ProtectedRouteWithChildren
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/register': typeof AuthRegisterRoute
+  '/_protected/bills': typeof ProtectedBillsRoute
+  '/_protected/categories': typeof ProtectedCategoriesRoute
+  '/_protected/dashboard': typeof ProtectedDashboardRoute
+  '/_protected/profile': typeof ProtectedProfileRoute
+  '/_protected/settings': typeof ProtectedSettingsRouteWithChildren
+  '/_protected/': typeof ProtectedIndexRoute
+  '/_protected/settings/finance': typeof ProtectedSettingsFinanceRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/login"
-    | "/register"
-    | "/bills"
-    | "/categories"
-    | "/dashboard"
-    | "/profile"
-    | "/settings"
-    | "/"
-    | "/settings/finance";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/login'
+    | '/register'
+    | '/bills'
+    | '/categories'
+    | '/dashboard'
+    | '/profile'
+    | '/settings'
+    | '/'
+    | '/settings/finance'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/login"
-    | "/register"
-    | "/bills"
-    | "/categories"
-    | "/dashboard"
-    | "/profile"
-    | "/settings"
-    | "/"
-    | "/settings/finance";
+    | '/login'
+    | '/register'
+    | '/bills'
+    | '/categories'
+    | '/dashboard'
+    | '/profile'
+    | '/settings'
+    | '/'
+    | '/settings/finance'
   id:
-    | "__root__"
-    | "/_auth"
-    | "/_protected"
-    | "/_auth/login"
-    | "/_auth/register"
-    | "/_protected/bills"
-    | "/_protected/categories"
-    | "/_protected/dashboard"
-    | "/_protected/profile"
-    | "/_protected/settings"
-    | "/_protected/"
-    | "/_protected/settings/finance";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/_auth'
+    | '/_protected'
+    | '/_auth/login'
+    | '/_auth/register'
+    | '/_protected/bills'
+    | '/_protected/categories'
+    | '/_protected/dashboard'
+    | '/_protected/profile'
+    | '/_protected/settings'
+    | '/_protected/'
+    | '/_protected/settings/finance'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AuthRoute: typeof AuthRouteWithChildren;
-  ProtectedRoute: typeof ProtectedRouteWithChildren;
+  AuthRoute: typeof AuthRouteWithChildren
+  ProtectedRoute: typeof ProtectedRouteWithChildren
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/_protected": {
-      id: "/_protected";
-      path: "";
-      fullPath: "";
-      preLoaderRoute: typeof ProtectedRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_auth": {
-      id: "/_auth";
-      path: "";
-      fullPath: "";
-      preLoaderRoute: typeof AuthRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_protected/": {
-      id: "/_protected/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof ProtectedIndexRouteImport;
-      parentRoute: typeof ProtectedRoute;
-    };
-    "/_protected/settings": {
-      id: "/_protected/settings";
-      path: "/settings";
-      fullPath: "/settings";
-      preLoaderRoute: typeof ProtectedSettingsRouteImport;
-      parentRoute: typeof ProtectedRoute;
-    };
-    "/_protected/profile": {
-      id: "/_protected/profile";
-      path: "/profile";
-      fullPath: "/profile";
-      preLoaderRoute: typeof ProtectedProfileRouteImport;
-      parentRoute: typeof ProtectedRoute;
-    };
-    "/_protected/dashboard": {
-      id: "/_protected/dashboard";
-      path: "/dashboard";
-      fullPath: "/dashboard";
-      preLoaderRoute: typeof ProtectedDashboardRouteImport;
-      parentRoute: typeof ProtectedRoute;
-    };
-    "/_protected/categories": {
-      id: "/_protected/categories";
-      path: "/categories";
-      fullPath: "/categories";
-      preLoaderRoute: typeof ProtectedCategoriesRouteImport;
-      parentRoute: typeof ProtectedRoute;
-    };
-    "/_protected/bills": {
-      id: "/_protected/bills";
-      path: "/bills";
-      fullPath: "/bills";
-      preLoaderRoute: typeof ProtectedBillsRouteImport;
-      parentRoute: typeof ProtectedRoute;
-    };
-    "/_auth/register": {
-      id: "/_auth/register";
-      path: "/register";
-      fullPath: "/register";
-      preLoaderRoute: typeof AuthRegisterRouteImport;
-      parentRoute: typeof AuthRoute;
-    };
-    "/_auth/login": {
-      id: "/_auth/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof AuthLoginRouteImport;
-      parentRoute: typeof AuthRoute;
-    };
-    "/_protected/settings/finance": {
-      id: "/_protected/settings/finance";
-      path: "/finance";
-      fullPath: "/settings/finance";
-      preLoaderRoute: typeof ProtectedSettingsFinanceRouteImport;
-      parentRoute: typeof ProtectedSettingsRoute;
-    };
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof ProtectedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_protected/': {
+      id: '/_protected/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedIndexRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/settings': {
+      id: '/_protected/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof ProtectedSettingsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/profile': {
+      id: '/_protected/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProtectedProfileRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/dashboard': {
+      id: '/_protected/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof ProtectedDashboardRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/categories': {
+      id: '/_protected/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof ProtectedCategoriesRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/bills': {
+      id: '/_protected/bills'
+      path: '/bills'
+      fullPath: '/bills'
+      preLoaderRoute: typeof ProtectedBillsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_auth/register': {
+      id: '/_auth/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_protected/settings/finance': {
+      id: '/_protected/settings/finance'
+      path: '/finance'
+      fullPath: '/settings/finance'
+      preLoaderRoute: typeof ProtectedSettingsFinanceRouteImport
+      parentRoute: typeof ProtectedSettingsRoute
+    }
   }
 }
 
 interface AuthRouteChildren {
-  AuthLoginRoute: typeof AuthLoginRoute;
-  AuthRegisterRoute: typeof AuthRegisterRoute;
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
-};
+}
 
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface ProtectedSettingsRouteChildren {
-  ProtectedSettingsFinanceRoute: typeof ProtectedSettingsFinanceRoute;
+  ProtectedSettingsFinanceRoute: typeof ProtectedSettingsFinanceRoute
 }
 
 const ProtectedSettingsRouteChildren: ProtectedSettingsRouteChildren = {
   ProtectedSettingsFinanceRoute: ProtectedSettingsFinanceRoute,
-};
+}
 
 const ProtectedSettingsRouteWithChildren =
-  ProtectedSettingsRoute._addFileChildren(ProtectedSettingsRouteChildren);
+  ProtectedSettingsRoute._addFileChildren(ProtectedSettingsRouteChildren)
 
 interface ProtectedRouteChildren {
-  ProtectedBillsRoute: typeof ProtectedBillsRoute;
-  ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute;
-  ProtectedDashboardRoute: typeof ProtectedDashboardRoute;
-  ProtectedProfileRoute: typeof ProtectedProfileRoute;
-  ProtectedSettingsRoute: typeof ProtectedSettingsRouteWithChildren;
-  ProtectedIndexRoute: typeof ProtectedIndexRoute;
+  ProtectedBillsRoute: typeof ProtectedBillsRoute
+  ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
+  ProtectedDashboardRoute: typeof ProtectedDashboardRoute
+  ProtectedProfileRoute: typeof ProtectedProfileRoute
+  ProtectedSettingsRoute: typeof ProtectedSettingsRouteWithChildren
+  ProtectedIndexRoute: typeof ProtectedIndexRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
@@ -276,16 +276,16 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRouteWithChildren,
   ProtectedIndexRoute: ProtectedIndexRoute,
-};
+}
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
   ProtectedRouteChildren,
-);
+)
 
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
