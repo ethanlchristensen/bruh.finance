@@ -1,15 +1,16 @@
 import os
 
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
-
-from api.middleware.websocket_jwt_auth_middleware import JWTAuthMiddleware
-from config.routing import websocket_urlpatterns
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django_asgi_app = get_asgi_application()
 
+# noqa: E402
+from channels.routing import ProtocolTypeRouter, URLRouter  # noqa: E402
+from channels.security.websocket import AllowedHostsOriginValidator  # noqa: E402
+
+from api.middleware.websocket_jwt_auth_middleware import JWTAuthMiddleware  # noqa: E402
+from config.routing import websocket_urlpatterns  # noqa: E402
 
 application = ProtocolTypeRouter(
     {
@@ -19,3 +20,4 @@ application = ProtocolTypeRouter(
         ),
     }
 )
+
