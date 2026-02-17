@@ -17,7 +17,49 @@ class FinanceAccountSchema(Schema):
         populate_by_name = True
 
 
+class SavingsAccountSchema(Schema):
+    startingBalance: float = Field(alias="starting_balance")
+    currentBalance: float = Field(alias="current_balance")
+    balanceAsOfDate: date = Field(alias="balance_as_of_date")
+    createdAt: Optional[datetime] = Field(default=None, alias="created_at")
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
+
+    class Config:
+        populate_by_name = True
+
+
+class SavingsRecurringDepositSchema(Schema):
+    id: Optional[int] = None
+    name: str
+    amount: float
+    frequency: str
+    startDate: date = Field(alias="start_date")
+    dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
+    dayOfMonth: Optional[int] = Field(default=None, alias="day_of_month")
+    notes: Optional[str] = None
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
+
+    class Config:
+        populate_by_name = True
+
+
+class SavingsTransactionSchema(Schema):
+    id: Optional[int] = None
+    transactionType: str = Field(alias="transaction_type")
+    amount: float
+    date: date
+    notes: Optional[str] = None
+    isDeleted: bool = Field(default=False, alias="is_deleted")
+    deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
+
+    class Config:
+        populate_by_name = True
+
+
 class CategorySchema(Schema):
+
     id: Optional[int] = None
     name: str
     type: str
@@ -82,9 +124,17 @@ class FinanceDataSchema(Schema):
     recurringBills: List[RecurringBillSchema]
     paychecks: List[PaycheckSchema]
     expenses: List[ExpenseSchema]
+    savingsAccount: SavingsAccountSchema = Field(alias="savings_account")
+    savingsRecurringDeposits: List[SavingsRecurringDepositSchema] = Field(
+        alias="savings_recurring_deposits"
+    )
+    savingsTransactions: List[SavingsTransactionSchema] = Field(
+        alias="savings_transactions"
+    )
 
 
 class CalendarDataRequestSchema(Schema):
+
     startDate: Optional[date] = None
     endDate: Optional[date] = None
     monthsToShow: int = 3
@@ -132,13 +182,28 @@ class CalendarExpenseSchema(Schema):
     relatedBillId: Optional[int] = None
 
 
+class CalendarSavingsTransactionSchema(Schema):
+    id: int
+    transactionType: str = Field(alias="transaction_type")
+    amount: float
+    date: str
+    notes: Optional[str] = None
+    source: Optional[str] = None
+    isRecurring: bool = Field(default=False, alias="is_recurring")
+
+    class Config:
+        populate_by_name = True
+
+
 class CalendarDaySchema(Schema):
     date: str
     isCurrentMonth: bool
     bills: List[CalendarBillSchema]
     paychecks: List[CalendarPaycheckSchema]
     expenses: List[CalendarExpenseSchema]
+    savingsTransactions: List[CalendarSavingsTransactionSchema]
     runningBalance: float
+    savingsRunningBalance: float = Field(default=0.0)
 
 
 class MonthlySummarySchema(Schema):
@@ -155,11 +220,24 @@ class FinanceAccountDataSchema(Schema):
     balanceAsOfDate: str
 
 
+class SavingsAccountDataSchema(Schema):
+    startingBalance: float
+    currentBalance: float
+    balanceAsOfDate: str
+
+
 class FinanceDashboardDataSchema(Schema):
     account: FinanceAccountDataSchema
     expenses: List[CalendarExpenseSchema]
     paychecks: List[CalendarPaycheckSchema]
     recurringBills: List[CalendarBillSchema]
+    savingsAccount: SavingsAccountDataSchema
+    savingsRecurringDeposits: List[SavingsRecurringDepositSchema] = Field(
+        alias="savings_recurring_deposits"
+    )
+    savingsTransactions: List[SavingsTransactionSchema] = Field(
+        alias="savings_transactions"
+    )
 
 
 class CategoryChoicesSchema(Schema):

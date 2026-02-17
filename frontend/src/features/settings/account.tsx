@@ -17,16 +17,25 @@ import {
   getAccount,
   updateAccount,
   initializeAccount,
+  getSavingsAccount,
+  updateSavingsAccount,
 } from "@/lib/finance-api";
 import { Loader2 } from "lucide-react";
 
 export default function FinanceSettingsPage() {
-  const [balance, setBalance] = useState("");
-  const [balanceDate, setBalanceDate] = useState(() => {
-    // Default to today
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  });
+  const getTodayString = () => new Date().toISOString().split("T")[0];
+  const formatAmount = (value?: number | null) => {
+    if (value === null || value === undefined) {
+      return "0.00";
+    }
+    return Number(value).toFixed(2);
+  };
+  const normalizeDate = (value?: string | null) => value ?? getTodayString();
+
+  const [balance, setBalance] = useState("0.00");
+  const [balanceDate, setBalanceDate] = useState(getTodayString);
+  const [savingsBalance, setSavingsBalance] = useState("");
+  const [savingsBalanceDate, setSavingsBalanceDate] = useState(getTodayString);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isNewAccount, setIsNewAccount] = useState(false);
@@ -35,13 +44,25 @@ export default function FinanceSettingsPage() {
     async function loadAccount() {
       try {
         const account = await getAccount();
-        setBalance(account.currentBalance.toString());
-        setBalanceDate(account.balanceAsOfDate);
+        setBalance(formatAmount(account.currentBalance));
+        setBalanceDate(normalizeDate(account.balanceAsOfDate));
         setIsNewAccount(false);
+
+        try {
+          const savingsAccount = await getSavingsAccount();
+          setSavingsBalance(formatAmount(savingsAccount.currentBalance));
+          setSavingsBalanceDate(normalizeDate(savingsAccount.balanceAsOfDate));
+        } catch (savingsError) {
+          console.warn("No savings account data found:", savingsError);
+          setSavingsBalance("");
+          setSavingsBalanceDate(getTodayString());
+        }
       } catch (error) {
         console.error("Failed to load account:", error);
         // Assuming 404 means no account yet
         setIsNewAccount(true);
+        setBalance("0.00");
+        setBalanceDate(getTodayString());
       } finally {
         setIsLoading(false);
       }
@@ -67,6 +88,15 @@ export default function FinanceSettingsPage() {
           balanceAsOfDate: balanceDate,
         });
         console.log("Account updated:", result);
+      }
+
+      if (savingsBalance) {
+        const savingsNum = Number.parseFloat(savingsBalance) || 0;
+        await updateSavingsAccount({
+          currentBalance: savingsNum,
+          startingBalance: savingsNum,
+          balanceAsOfDate: savingsBalanceDate,
+        });
       }
 
       window.location.href = "/dashboard";
@@ -134,6 +164,41 @@ export default function FinanceSettingsPage() {
               />
               <p className="text-sm text-muted-foreground">
                 The date this balance is accurate as of
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="savingsBalance">Savings Balance (Optional)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  $
+                </span>
+                <Input
+                  id="savingsBalance"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={savingsBalance}
+                  onChange={(e) => setSavingsBalance(e.target.value)}
+                  className="pl-7"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Leave blank to keep your existing savings balance unchanged.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="savingsBalanceDate">Savings Balance As Of</Label>
+              <Input
+                id="savingsBalanceDate"
+                type="date"
+                value={savingsBalanceDate}
+                onChange={(e) => setSavingsBalanceDate(e.target.value)}
+                disabled={!savingsBalance}
+              />
+              <p className="text-sm text-muted-foreground">
+                The date this savings balance is accurate as of
               </p>
             </div>
 

@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import SetupPage from "@/features/settings/main";
+import FinanceSettingsPage from "@/features/settings/account";
 
 export const Route = createFileRoute("/_protected/settings")({
-  component: RouteComponent,
+  component: FinanceSettingsPage,
 });
-
-function RouteComponent() {
-  return <SetupPage />;
-}

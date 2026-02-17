@@ -1,6 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import FinanceSettingsPage from "@/features/settings/account";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/settings/finance")({
-  component: FinanceSettingsPage,
+  loader: () => {
+    throw redirect({ to: "/settings", replace: true });
+  },
+  component: () => null,
 });

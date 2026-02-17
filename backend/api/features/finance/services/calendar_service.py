@@ -4,7 +4,17 @@ from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import User
 
-from api.features.finance.models import Expense, FinanceAccount, Paycheck, RecurringBill
+from api.features.finance.models import (
+    Expense,
+    FinanceAccount,
+    Paycheck,
+    RecurringBill,
+    SavingsAccount,
+    SavingsRecurringDeposit,
+    SavingsTransaction,
+)
+
+
 
 
 class CalendarService:
@@ -36,7 +46,18 @@ class CalendarService:
         else:
             calc_end_date = end_date
 
+        # Ensure savings account exists for forecasting
+        savings_account, _ = SavingsAccount.objects.get_or_create(
+            user=user,
+            defaults={
+                "starting_balance": Decimal("0.00"),
+                "current_balance": Decimal("0.00"),
+                "balance_as_of_date": balance_date,
+            },
+        )
+
         # Get all data
+
         bills = list(
             RecurringBill.objects.filter(user=user, is_deleted=False).select_related("category")
         )
@@ -46,8 +67,15 @@ class CalendarService:
         expenses = list(
             Expense.objects.filter(user=user, is_deleted=False).select_related("category")
         )
+        recurring_savings = list(
+            SavingsRecurringDeposit.objects.filter(user=user, is_deleted=False)
+        )
+        savings_transactions = list(
+            SavingsTransaction.objects.filter(user=user, is_deleted=False)
+        )
 
         # Track bill payments for bills with totals
+
         bill_payments = {}
         for bill in bills:
             if bill.total:
@@ -56,7 +84,9 @@ class CalendarService:
         # Generate calendar days
         calendar_days = []
         running_balance = account.starting_balance
+        savings_running_balance = savings_account.starting_balance
         current_date = calc_start_date
+
 
         while current_date <= calc_end_date:
             should_calculate = current_date >= balance_date
@@ -72,6 +102,16 @@ class CalendarService:
             )
             day_expenses = (
                 self._get_expenses_for_date(expenses, current_date) if should_calculate else []
+            )
+            day_savings_transactions = (
+                self._get_savings_transactions_for_date(savings_transactions, current_date)
+                if should_calculate
+                else []
+            )
+            day_recurring_savings = (
+                self._get_recurring_savings_for_date(recurring_savings, current_date)
+                if should_calculate
+                else []
             )
 
             # Calculate balance changes
@@ -90,23 +130,73 @@ class CalendarService:
                     # Subtract expense amount from running balance
                     running_balance -= exp.amount
 
-                    # If this expense is related to a bill (e.g. paying off a credit card),
-                    # we should also apply it towards that bill's total payment if applicable.
-                    # This logic assumes the 'expense' represents the payment being made.
+                    # Apply expense towards related bill payoff if applicable
                     if hasattr(exp, "related_bill") and exp.related_bill:
-                        # Find the bill in our bill_payments tracker
                         related_bill_id = exp.related_bill.id
                         if related_bill_id in bill_payments:
-                            # This assumes the expense amount counts towards paying off the bill
                             bill_payments[related_bill_id] += exp.amount
                         elif exp.related_bill.total:
-                            # Initialize tracking for this bill if we haven't seen it due yet but paying it early?
-                            # Or if it was just missed in initial scan (unlikely if passed in bills list)
                             bill_payments[related_bill_id] = exp.amount
+
+                for savings_txn in day_savings_transactions:
+                    if savings_txn.transaction_type == "deposit":
+                        running_balance -= savings_txn.amount
+                        savings_running_balance += savings_txn.amount
+                    elif savings_txn.transaction_type == "transfer_to_checking":
+                        running_balance += savings_txn.amount
+                        savings_running_balance -= savings_txn.amount
+
+                for recurring_deposit in day_recurring_savings:
+                    # Only subtract from checking if it's NOT a payroll deposit
+                    if not getattr(recurring_deposit, "is_payroll_deposit", False):
+                        running_balance -= recurring_deposit.amount
+                    savings_running_balance += recurring_deposit.amount
+
+            day_savings_entries = [
+                {
+                    "id": txn.id,
+                    "transaction_type": txn.transaction_type,
+                    "amount": txn.amount,
+                    "date": txn.date.isoformat(),
+                    "notes": txn.notes,
+                    "source": txn.notes
+                    or (
+                        "Transfer to Checking"
+                        if txn.transaction_type == "transfer_to_checking"
+                        else "Savings Deposit"
+                    ),
+                    "is_recurring": False,
+                }
+                for txn in day_savings_transactions
+            ]
+
+            for recurring_deposit in day_recurring_savings:
+                # Generate a unique integer ID for recurring transactions (negative to avoid collision)
+                # Format: -{deposit_id}{YYYYMMDD}
+                virtual_id = int(f"{recurring_deposit.id}{current_date.strftime('%Y%m%d')}") * -1
+                
+                is_payroll = getattr(recurring_deposit, "is_payroll_deposit", False)
+                source_name = recurring_deposit.name
+                if is_payroll:
+                    source_name += " (Payroll Deduction)"
+
+                day_savings_entries.append(
+                    {
+                        "id": virtual_id,
+                        "transaction_type": "deposit",
+                        "amount": recurring_deposit.amount,
+                        "date": current_date.isoformat(),
+                        "notes": recurring_deposit.notes,
+                        "source": source_name,
+                        "is_recurring": True,
+                        "is_payroll_deposit": is_payroll,
+                    }
+                )
 
             calendar_days.append(
                 {
                     "date": current_date.isoformat(),
+
                     "isCurrentMonth": True,
                     "bills": [
                         {
@@ -142,7 +232,12 @@ class CalendarService:
                         }
                         for exp in day_expenses
                     ],
+                    "savingsTransactions": day_savings_entries,
                     "runningBalance": running_balance if should_calculate else Decimal("0.00"),
+                    "savingsRunningBalance": savings_running_balance,
+
+
+
                 }
             )
 
@@ -292,6 +387,64 @@ class CalendarService:
         """Get expenses for a specific date"""
         return [exp for exp in expenses if exp.date == target_date]
 
+    def _get_recurring_savings_for_date(
+        self, deposits: List[SavingsRecurringDeposit], target_date: date
+    ) -> List[SavingsRecurringDeposit]:
+        """Get recurring savings deposits scheduled for a specific date"""
+        matching = []
+        for deposit in deposits:
+            if self._is_recurring_savings_on_date(deposit, target_date):
+                matching.append(deposit)
+        return matching
+
+    def _get_savings_transactions_for_date(
+        self, transactions: List[SavingsTransaction], target_date: date
+    ) -> List[SavingsTransaction]:
+        """Get savings transactions for a specific date"""
+        return [txn for txn in transactions if txn.date == target_date]
+
+    def _is_recurring_savings_on_date(
+        self, deposit: SavingsRecurringDeposit, target_date: date
+    ) -> bool:
+        # 1. Never show before start date
+        if target_date < deposit.start_date:
+            return False
+
+        # 2. Normalize frequency string (handles "Bi-Weekly", "bi-weekly")
+        frequency = (deposit.frequency or "").lower().replace("-", "").replace("_", "").strip()
+
+        # 3. Handle Weekly/Biweekly using simple day math relative to Start Date
+        #    This guarantees the Start Date is included and ignores conflicting day_of_week settings.
+        if frequency == "weekly":
+            days_diff = (target_date - deposit.start_date).days
+            return days_diff % 7 == 0
+
+        if frequency == "biweekly":
+            days_diff = (target_date - deposit.start_date).days
+            return days_diff % 14 == 0
+
+        # 4. Handle Monthly (Complex logic for end-of-month dates)
+        if frequency == "monthly":
+            # Prefer the explicit day_of_month, fallback to start_date.day
+            day_of_month = (
+                deposit.day_of_month if deposit.day_of_month else deposit.start_date.day
+            )
+
+            # Logic to handle short months (e.g. if day iser
+            #  31st, use 30th for April)
+            if target_date.month == 12:
+                last_day = 31
+            else:
+                next_month = date(target_date.year, target_date.month % 12 + 1, 1)
+                last_day = (next_month - timedelta(days=1)).day
+
+            target_day = min(day_of_month, last_day)
+            
+            return target_date.day == target_day
+
+        # Default: If no recurring freq matches, treat as one-time
+        return target_date == deposit.start_date
+    
     def get_balance_projections(self, user: User, months: int = 24) -> List[Dict[str, Any]]:
         """Get balance projections for future months"""
         calendar_data = self.generate_calendar_data(user=user, months_to_show=months)
@@ -313,12 +466,16 @@ class CalendarService:
                     "min_balance": float("inf"),
                     "max_balance": float("-inf"),
                     "end_balance": Decimal("0.00"),
+                    "savings_end_balance": Decimal("0.00"),
                 }
 
             balance = day["runningBalance"]
+            savings_balance = day.get("savingsRunningBalance", Decimal("0.00"))
+
             month_data["min_balance"] = min(month_data["min_balance"], balance)
             month_data["max_balance"] = max(month_data["max_balance"], balance)
             month_data["end_balance"] = balance
+            month_data["savings_end_balance"] = savings_balance
 
         if month_data:
             projections.append(month_data)

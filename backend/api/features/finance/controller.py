@@ -14,6 +14,16 @@ from api.features.finance.controllers.paycheck_controller import PaycheckControl
 from api.features.finance.controllers.recurring_bill_controller import (
     RecurringBillController,
 )
+from api.features.finance.controllers.savings_account_controller import (
+    SavingsAccountController,
+)
+from api.features.finance.controllers.savings_recurring_deposit_controller import (
+    SavingsRecurringDepositController,
+)
+from api.features.finance.controllers.savings_transaction_controller import (
+    SavingsTransactionController,
+)
+
 
 __all__ = [
     "ExpenseController",
@@ -22,5 +32,9 @@ __all__ = [
     "RecurringBillController",
     "PaycheckController",
     "FinanceDashboardController",
-    "CategoryController",
+        "CategoryController",
+    "SavingsAccountController",
+    "SavingsRecurringDepositController",
+    "SavingsTransactionController",
 ]
+

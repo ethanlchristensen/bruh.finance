@@ -3,8 +3,18 @@ from decimal import Decimal
 from typing import Any, Dict, List
 
 from django.contrib.auth.models import User
+from django.utils import timezone
 
-from api.features.finance.models import Expense, FinanceAccount, Paycheck, RecurringBill
+from api.features.finance.models import (
+    Expense,
+    FinanceAccount,
+    Paycheck,
+    RecurringBill,
+    SavingsAccount,
+    SavingsRecurringDeposit,
+    SavingsTransaction,
+)
+
 
 
 class FinanceDashboardService:
@@ -15,9 +25,24 @@ class FinanceDashboardService:
         except FinanceAccount.DoesNotExist:
             raise ValueError("No finance account found for user")
 
+        savings_account, _ = SavingsAccount.objects.get_or_create(
+            user=user,
+            defaults={
+                "starting_balance": Decimal("0.00"),
+                "current_balance": Decimal("0.00"),
+                "balance_as_of_date": timezone.now().date(),
+            },
+        )
+
         expenses = Expense.objects.filter(user=user, is_deleted=False).order_by("date")
         paychecks = Paycheck.objects.filter(user=user, is_deleted=False).order_by("date")
         bills = RecurringBill.objects.filter(user=user, is_deleted=False).order_by("due_day")
+        recurring_savings = SavingsRecurringDeposit.objects.filter(
+            user=user, is_deleted=False
+        ).order_by("created_at")
+        savings_transactions = SavingsTransaction.objects.filter(
+            user=user, is_deleted=False
+        ).order_by("-date", "-created_at")
 
         return {
             "account": {
@@ -57,7 +82,37 @@ class FinanceDashboardService:
                 }
                 for bill in bills
             ],
+            "savingsAccount": {
+                "startingBalance": savings_account.starting_balance,
+                "currentBalance": savings_account.current_balance,
+                "balanceAsOfDate": savings_account.balance_as_of_date.isoformat(),
+            },
+            "savings_recurring_deposits": [
+                {
+                    "id": deposit.id,
+                    "name": deposit.name,
+                    "amount": deposit.amount,
+                    "frequency": deposit.frequency,
+                    "start_date": deposit.start_date.isoformat(),
+                    "day_of_week": deposit.day_of_week,
+                    "day_of_month": deposit.day_of_month,
+                    "notes": deposit.notes,
+                }
+                for deposit in recurring_savings
+            ],
+            "savings_transactions": [
+                {
+                    "id": transaction.id,
+                    "transaction_type": transaction.transaction_type,
+                    "amount": transaction.amount,
+                                        "date": transaction.date.isoformat(),
+
+                    "notes": transaction.notes,
+                }
+                for transaction in savings_transactions
+            ],
         }
+
 
     def get_monthly_summary(
         self, user: User, start_date: date, months_count: int

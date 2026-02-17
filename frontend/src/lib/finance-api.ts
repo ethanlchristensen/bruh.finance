@@ -10,6 +10,33 @@ export interface FinanceAccount {
   createdAt?: string;
 }
 
+export interface SavingsAccount {
+  startingBalance: number;
+  currentBalance: number;
+  balanceAsOfDate: string;
+  createdAt?: string;
+}
+
+export interface SavingsRecurringDeposit {
+  id: number;
+  name: string;
+  amount: number;
+  frequency: "weekly" | "biweekly" | "monthly" | string;
+  startDate: string;
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  isPayrollDeposit?: boolean;
+  notes?: string | null;
+}
+
+export interface SavingsTransaction {
+  id: number;
+  transactionType: "deposit" | "transfer_to_checking" | string;
+  amount: number;
+  date: string;
+  notes?: string | null;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -55,6 +82,9 @@ export interface FinanceData {
   recurringBills: RecurringBill[];
   paychecks: Paycheck[];
   expenses: Expense[];
+  savingsAccount: SavingsAccount;
+  savingsRecurringDeposits: SavingsRecurringDeposit[];
+  savingsTransactions: SavingsTransaction[];
 }
 
 export interface CalendarBill {
@@ -84,13 +114,36 @@ export interface CalendarExpense {
   relatedBillId?: number | null;
 }
 
-export interface CalendarDay {
+export interface CalendarSavingsTransaction {
+  id: number;
+  transactionType: "deposit" | "transfer_to_checking" | string;
+  amount: number;
+  date: string;
+  notes?: string | null;
+  source?: string | null;
+  isRecurring?: boolean;
+}
+
+export interface CalendarDayResponse {
   date: string;
   isCurrentMonth: boolean;
   bills: CalendarBill[];
   paychecks: CalendarPaycheck[];
   expenses: CalendarExpense[];
+  savingsTransactions: CalendarSavingsTransaction[];
+  runningBalance: number | string;
+  savingsRunningBalance: number | string;
+}
+
+export interface CalendarDay {
+  date: Date;
+  isCurrentMonth: boolean;
+  bills: CalendarBill[];
+  paychecks: CalendarPaycheck[];
+  expenses: CalendarExpense[];
+  savingsTransactions: CalendarSavingsTransaction[];
   runningBalance: number;
+  savingsRunningBalance: number;
 }
 
 export interface CategoryChoice {
@@ -108,12 +161,17 @@ function normalizeAccount(account: FinanceAccount): FinanceAccount {
   return account;
 }
 
+function normalizeSavingsAccount(account: SavingsAccount): SavingsAccount {
+  return account;
+}
+
 // API Functions
 export async function getFinanceData() {
   const data = await api.get<FinanceData>("/finance");
   return {
     ...data,
     account: normalizeAccount(data.account),
+    savingsAccount: normalizeSavingsAccount(data.savingsAccount),
   };
 }
 
@@ -122,7 +180,7 @@ export async function getCalendarData(
   endDate: string,
   monthsToShow: number,
 ) {
-  const response = await api.post<CalendarDay[]>(
+  const response = await api.post<CalendarDayResponse[]>(
     "/finance/dashboard/calendar",
     {
       startDate: startDate,
@@ -131,17 +189,35 @@ export async function getCalendarData(
     },
   );
 
-  return response.map((day) => {
+  return response.map<CalendarDay>((day) => {
     const [year, month, dayNum] = day.date.split("-").map(Number);
     const localDate = new Date(year, month - 1, dayNum);
+
+    const normalizedSavings = (day.savingsTransactions || []).map((txn) => {
+      const numericAmount = Number(txn.amount);
+      return {
+        ...txn,
+        amount: Number.isFinite(numericAmount) ? numericAmount : 0,
+        isRecurring: Boolean(txn.isRecurring),
+      };
+    });
+
+    const normalizedRunningBalance =
+      typeof day.runningBalance === "number"
+        ? day.runningBalance
+        : Number.parseFloat(String(day.runningBalance || "0"));
+
+    const normalizedSavingsBalance =
+      typeof day.savingsRunningBalance === "number"
+        ? day.savingsRunningBalance
+        : Number.parseFloat(String(day.savingsRunningBalance || "0"));
 
     return {
       ...day,
       date: localDate,
-      runningBalance:
-        typeof day.runningBalance === "number"
-          ? day.runningBalance
-          : parseFloat(day.runningBalance || "0"),
+      savingsTransactions: normalizedSavings,
+      runningBalance: normalizedRunningBalance,
+      savingsRunningBalance: normalizedSavingsBalance,
     };
   });
 }
@@ -158,6 +234,18 @@ export async function initializeAccount(
   return normalizeAccount(response);
 }
 
+export async function initializeSavingsAccount(
+  startingBalance: number,
+  balanceAsOfDate: string,
+) {
+  const response = await api.patch<SavingsAccount>("/finance/savings/account", {
+    startingBalance,
+    currentBalance: startingBalance,
+    balanceAsOfDate,
+  });
+  return normalizeSavingsAccount(response);
+}
+
 export async function getAccount() {
   const response = await api.get<FinanceAccount>("/finance/account");
   return normalizeAccount(response);
@@ -166,6 +254,19 @@ export async function getAccount() {
 export async function updateAccount(account: Partial<FinanceAccount>) {
   const response = await api.patch<FinanceAccount>("/finance/account", account);
   return normalizeAccount(response);
+}
+
+export async function getSavingsAccount() {
+  const response = await api.get<SavingsAccount>("/finance/savings/account");
+  return normalizeSavingsAccount(response);
+}
+
+export async function updateSavingsAccount(account: Partial<SavingsAccount>) {
+  const response = await api.patch<SavingsAccount>(
+    "/finance/savings/account",
+    account,
+  );
+  return normalizeSavingsAccount(response);
 }
 
 // Recurring Bills
@@ -263,6 +364,61 @@ export async function updateExpense(id: number, expense: Partial<Expense>) {
 
 export async function deleteExpense(id: number) {
   await api.delete(`/finance/expenses/${id}`);
+}
+
+// Savings Recurring Deposits
+export async function getSavingsRecurringDeposits() {
+  const response = await api.get<SavingsRecurringDeposit[]>(
+    "/finance/savings/recurring-deposits",
+  );
+  return response;
+}
+
+export async function addSavingsRecurringDeposit(
+  deposit: Omit<SavingsRecurringDeposit, "id">,
+) {
+  const response = await api.post<SavingsRecurringDeposit>(
+    "/finance/savings/recurring-deposits",
+    deposit,
+  );
+  return response;
+}
+
+export async function updateSavingsRecurringDeposit(
+  id: number,
+  deposit: Partial<SavingsRecurringDeposit>,
+) {
+  const response = await api.patch<SavingsRecurringDeposit>(
+    `/finance/savings/recurring-deposits/${id}`,
+    deposit,
+  );
+  return response;
+}
+
+export async function deleteSavingsRecurringDeposit(id: number) {
+  await api.delete(`/finance/savings/recurring-deposits/${id}`);
+}
+
+// Savings Transactions
+export async function getSavingsTransactions() {
+  const response = await api.get<SavingsTransaction[]>(
+    "/finance/savings/transactions",
+  );
+  return response;
+}
+
+export async function addSavingsTransaction(
+  transaction: Omit<SavingsTransaction, "id">,
+) {
+  const response = await api.post<SavingsTransaction>(
+    "/finance/savings/transactions",
+    transaction,
+  );
+  return response;
+}
+
+export async function deleteSavingsTransaction(id: number) {
+  await api.delete(`/finance/savings/transactions/${id}`);
 }
 
 // Categories

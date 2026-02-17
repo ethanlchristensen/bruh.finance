@@ -32,7 +32,73 @@ class FinanceAccount(SoftDeleteModel):
         return f"{self.user.username}'s Finance Account"
 
 
+class SavingsAccount(SoftDeleteModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="savings_account")
+    starting_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    balance_as_of_date = models.DateField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Savings Account"
+
+
+SAVINGS_FREQUENCY_CHOICES = [
+    ("weekly", "Weekly"),
+    ("biweekly", "Bi-Weekly"),
+    ("monthly", "Monthly"),
+]
+
+
+class SavingsRecurringDeposit(SoftDeleteModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="savings_recurring_deposits")
+    savings_account = models.ForeignKey(
+        SavingsAccount,
+        on_delete=models.CASCADE,
+        related_name="recurring_deposits",
+    )
+    name = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    frequency = models.CharField(max_length=20, choices=SAVINGS_FREQUENCY_CHOICES, default="monthly")
+    start_date = models.DateField(default=timezone.now)
+    day_of_week = models.IntegerField(null=True, blank=True)
+    day_of_month = models.IntegerField(null=True, blank=True)
+    is_payroll_deposit = models.BooleanField(
+        default=False,
+        help_text="If true, this deposit is deducted directly from payroll and does not reduce the checking account balance.",
+    )
+    notes = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.name} Savings Deposit"
+
+
+SAVINGS_TRANSACTION_TYPE_CHOICES = [
+    ("deposit", "Deposit"),
+    ("transfer_to_checking", "Transfer to Checking"),
+]
+
+
+class SavingsTransaction(SoftDeleteModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="savings_transactions")
+    savings_account = models.ForeignKey(
+        SavingsAccount,
+        on_delete=models.CASCADE,
+        related_name="transactions",
+    )
+    transaction_type = models.CharField(max_length=32, choices=SAVINGS_TRANSACTION_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField(default=timezone.now)
+    notes = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.get_transaction_type_display()} on {self.date}"
+
+
 TAILWIND_BG_COLOR_CHOICES = [
+
     ("red-500", "Red"),
     ("rose-500", "Rose"),
     ("orange-500", "Orange"),

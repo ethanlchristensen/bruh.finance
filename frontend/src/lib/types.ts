@@ -5,6 +5,32 @@ export interface FinanceAccount {
   createdAt?: string;
 }
 
+export interface SavingsAccount {
+  startingBalance: number;
+  currentBalance: number;
+  balanceAsOfDate: string;
+  createdAt?: string;
+}
+
+export interface SavingsRecurringDeposit {
+  id: number;
+  name: string;
+  amount: number;
+  frequency: "weekly" | "biweekly" | "monthly" | string;
+  startDate: string;
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  notes?: string | null;
+}
+
+export interface SavingsTransaction {
+  id: number;
+  transactionType: "deposit" | "transfer_to_checking" | string;
+  amount: number;
+  date: string;
+  notes?: string | null;
+}
+
 export interface RecurringBill {
   id: number;
   name: string;
@@ -37,4 +63,7 @@ export interface FinanceData {
   recurringBills: RecurringBill[];
   paychecks: Paycheck[];
   expenses: Expense[];
+  savingsAccount: SavingsAccount;
+  savingsRecurringDeposits: SavingsRecurringDeposit[];
+  savingsTransactions: SavingsTransaction[];
 }

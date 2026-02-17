@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from api.features.finance.models import Category, Expense, FinanceAccount, Paycheck, RecurringBill
+from api.features.finance.models import (
+    Category,
+    Expense,
+    FinanceAccount,
+    Paycheck,
+    RecurringBill,
+    SavingsAccount,
+    SavingsRecurringDeposit,
+    SavingsTransaction,
+)
 from api.features.users.models import Profile
 
 admin.site.register(Profile)
@@ -9,3 +18,6 @@ admin.site.register(RecurringBill)
 admin.site.register(Expense)
 admin.site.register(Paycheck)
 admin.site.register(Category)
+admin.site.register(SavingsAccount)
+admin.site.register(SavingsRecurringDeposit)
+admin.site.register(SavingsTransaction)
