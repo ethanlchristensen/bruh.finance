@@ -1,5 +1,3 @@
-import React from "react";
-
 export function ErrorState({ error }: { error: string }) {
   if (
     error === "NO_ACCOUNT" ||

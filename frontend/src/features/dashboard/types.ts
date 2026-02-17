@@ -1,10 +1,7 @@
 import type {
   FinanceData,
   Category,
-  CalendarDay,
-  RecurringBill,
-  SavingsRecurringDeposit,
-  SavingsTransaction,
+  CalendarDay
 } from "@/lib/finance-api";
 
 export type DashboardData = {

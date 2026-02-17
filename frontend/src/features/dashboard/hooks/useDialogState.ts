@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 
 export function useDialogState() {
   const [billDialogOpen, setBillDialogOpen] = useState(false);
