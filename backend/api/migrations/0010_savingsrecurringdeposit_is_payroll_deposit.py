@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0009_savingsaccount_savingsrecurringdeposit_and_more'),
+        ("api", "0009_savingsaccount_savingsrecurringdeposit_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='savingsrecurringdeposit',
-            name='is_payroll_deposit',
-            field=models.BooleanField(default=False, help_text='If true, this deposit is deducted directly from payroll and does not reduce the checking account balance.'),
+            model_name="savingsrecurringdeposit",
+            name="is_payroll_deposit",
+            field=models.BooleanField(
+                default=False,
+                help_text="If true, this deposit is deducted directly from payroll and does not reduce the checking account balance.",
+            ),
         ),
     ]

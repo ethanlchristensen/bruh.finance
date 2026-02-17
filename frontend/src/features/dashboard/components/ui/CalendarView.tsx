@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CalendarIcon, Trash2 } from "lucide-react";
 import type { CalendarDay } from "@/lib/finance-api";
@@ -53,8 +48,7 @@ export function CalendarView({
         // Filter calendar days for this specific month
         const monthDays = calendarDays.filter(
           (day) =>
-            day.date.getMonth() === month &&
-            day.date.getFullYear() === year,
+            day.date.getMonth() === month && day.date.getFullYear() === year,
         );
 
         // Add padding days for the start of the month
@@ -80,11 +74,7 @@ export function CalendarView({
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={onNextMonth}
-                    >
+                    <Button variant="outline" size="icon" onClick={onNextMonth}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -118,15 +108,13 @@ export function CalendarView({
                     balanceMonth - 1,
                     balanceDay,
                   );
-                  const isBeforeBalanceDate =
-                    day.date < balanceAsOfDateDate;
+                  const isBeforeBalanceDate = day.date < balanceAsOfDateDate;
 
                   return (
                     <div
                       key={idx}
                       className={`min-h-24 p-2 border rounded-lg bg-card ${
-                        day.date.toDateString() ===
-                        new Date().toDateString()
+                        day.date.toDateString() === new Date().toDateString()
                           ? "ring-2 ring-primary"
                           : ""
                       } ${isBeforeBalanceDate ? "opacity-40" : ""}`}
@@ -180,8 +168,7 @@ export function CalendarView({
 
                         {Array.isArray(day.bills) &&
                           day.bills.map((bill) => {
-                            const color =
-                              bill.category?.color || "gray-500";
+                            const color = bill.category?.color || "gray-500";
                             const colorVar = `var(--color-${color})`;
 
                             return (
@@ -203,15 +190,13 @@ export function CalendarView({
                                     </div>
                                     {bill.total && (
                                       <div className="text-[10px] font-semibold">
-                                        ${bill.amountPaid?.toFixed(0) || 0}{" "}
-                                        / ${bill.total.toFixed(0)}
+                                        ${bill.amountPaid?.toFixed(0) || 0} / $
+                                        {bill.total.toFixed(0)}
                                       </div>
                                     )}
                                   </div>
                                   <button
-                                    onClick={() =>
-                                      onDeleteBill(bill.id)
-                                    }
+                                    onClick={() => onDeleteBill(bill.id)}
                                     className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
                                   >
                                     <Trash2 className="h-3 w-3" />
@@ -245,9 +230,7 @@ export function CalendarView({
                                     </div>
                                   </div>
                                   <button
-                                    onClick={() =>
-                                      onDeleteExpense(exp.id)
-                                    }
+                                    onClick={() => onDeleteExpense(exp.id)}
                                     className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
                                   >
                                     <Trash2 className="h-3 w-3" />
@@ -260,8 +243,7 @@ export function CalendarView({
                         {Array.isArray(day.savingsTransactions) &&
                           day.savingsTransactions.map((txn) => {
                             const isTransfer =
-                              txn.transactionType ===
-                              "transfer_to_checking";
+                              txn.transactionType === "transfer_to_checking";
                             const isRecurring = Boolean(txn.isRecurring);
                             const wrapperClass = isTransfer
                               ? "bg-sky-500/10 text-sky-500"
@@ -304,9 +286,7 @@ export function CalendarView({
                                   {!isRecurring && (
                                     <button
                                       onClick={() =>
-                                        onDeleteSavingsTransaction(
-                                          txn.id,
-                                        )
+                                        onDeleteSavingsTransaction(txn.id)
                                       }
                                       className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
                                       aria-label="Delete savings transaction"

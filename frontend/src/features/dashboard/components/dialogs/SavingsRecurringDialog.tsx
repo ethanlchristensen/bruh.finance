@@ -30,10 +30,11 @@ export function SavingsRecurringDialog({
   open,
   onOpenChange,
 }: SavingsRecurringDialogProps) {
-  const { savingsRecurringForm, setSavingsRecurringForm, handleAddSavingsRecurringDeposit } = useSavingsRecurringDialog(
-    onSuccess,
-    onOpenChange
-  );
+  const {
+    savingsRecurringForm,
+    setSavingsRecurringForm,
+    handleAddSavingsRecurringDeposit,
+  } = useSavingsRecurringDialog(onSuccess, onOpenChange);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,13 +117,9 @@ export function SavingsRecurringDialog({
               }
             />
           </div>
-          {(["weekly", "biweekly"].includes(
-            savingsRecurringForm.frequency,
-          ) && (
+          {(["weekly", "biweekly"].includes(savingsRecurringForm.frequency) && (
             <div>
-              <Label htmlFor="recurringSavingsDayOfWeek">
-                Day of Week
-              </Label>
+              <Label htmlFor="recurringSavingsDayOfWeek">Day of Week</Label>
               <Select
                 value={savingsRecurringForm.dayOfWeek}
                 onValueChange={(v) =>
@@ -149,9 +146,7 @@ export function SavingsRecurringDialog({
           )) ||
             (savingsRecurringForm.frequency === "monthly" && (
               <div>
-                <Label htmlFor="recurringSavingsDayOfMonth">
-                  Day of Month
-                </Label>
+                <Label htmlFor="recurringSavingsDayOfMonth">Day of Month</Label>
                 <Input
                   id="recurringSavingsDayOfMonth"
                   type="number"
@@ -180,17 +175,12 @@ export function SavingsRecurringDialog({
                 })
               }
             />
-            <Label
-              htmlFor="recurringSavingsPayroll"
-              className="font-normal"
-            >
+            <Label htmlFor="recurringSavingsPayroll" className="font-normal">
               Deduct directly from payroll? (Skip checking account)
             </Label>
           </div>
           <div>
-            <Label htmlFor="recurringSavingsNotes">
-              Notes (Optional)
-            </Label>
+            <Label htmlFor="recurringSavingsNotes">Notes (Optional)</Label>
             <Input
               id="recurringSavingsNotes"
               placeholder="Automatic transfer from paycheck"
@@ -203,10 +193,7 @@ export function SavingsRecurringDialog({
               }
             />
           </div>
-          <Button
-            onClick={handleAddSavingsRecurringDeposit}
-            className="w-full"
-          >
+          <Button onClick={handleAddSavingsRecurringDeposit} className="w-full">
             Add Recurring Contribution
           </Button>
         </div>

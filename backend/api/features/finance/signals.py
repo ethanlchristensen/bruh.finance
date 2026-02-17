@@ -8,7 +8,6 @@ from django.utils import timezone
 from .models import FinanceAccount, SavingsAccount
 
 
-
 @receiver(post_save, sender=User)
 def create_finance_account(sender, instance, created, **kwargs):
     if created:
@@ -32,4 +31,3 @@ def save_finance_account(sender, instance, **kwargs):
         instance.finance_account.save()
     if hasattr(instance, "savings_account"):
         instance.savings_account.save()
-

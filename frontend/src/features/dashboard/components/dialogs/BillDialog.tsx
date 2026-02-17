@@ -36,7 +36,7 @@ export function BillDialog({
   const { billForm, setBillForm, handleAddBill } = useBillDialog(
     categories,
     onSuccess,
-    onOpenChange
+    onOpenChange,
   );
 
   return (

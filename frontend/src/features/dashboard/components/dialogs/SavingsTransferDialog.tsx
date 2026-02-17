@@ -23,10 +23,11 @@ export function SavingsTransferDialog({
   open,
   onOpenChange,
 }: SavingsTransferDialogProps) {
-  const { savingsTransferForm, setSavingsTransferForm, handleTransferToChecking } = useSavingsTransferDialog(
-    onSuccess,
-    onOpenChange
-  );
+  const {
+    savingsTransferForm,
+    setSavingsTransferForm,
+    handleTransferToChecking,
+  } = useSavingsTransferDialog(onSuccess, onOpenChange);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,9 +76,7 @@ export function SavingsTransferDialog({
             />
           </div>
           <div>
-            <Label htmlFor="savingsTransferNotes">
-              Notes (Optional)
-            </Label>
+            <Label htmlFor="savingsTransferNotes">Notes (Optional)</Label>
             <Input
               id="savingsTransferNotes"
               placeholder="Emergency fund transfer"

@@ -30,7 +30,7 @@ export function useSavingsDepositDialog(
       });
 
       await onSuccess();
-      
+
       const today = new Date().toISOString().split("T")[0];
       setSavingsDepositForm({ amount: "", date: today, notes: "" });
       onOpenChange(false);

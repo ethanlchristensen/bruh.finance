@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { addSavingsRecurringDeposit, type SavingsRecurringDeposit } from "@/lib/finance-api";
+import {
+  addSavingsRecurringDeposit,
+  type SavingsRecurringDeposit,
+} from "@/lib/finance-api";
 
 export function useSavingsRecurringDialog(
   onSuccess: () => Promise<void>,

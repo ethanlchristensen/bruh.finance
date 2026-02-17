@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,16 +21,19 @@ import {
 } from "@/lib/finance-api";
 import { Loader2 } from "lucide-react";
 
-export default function FinanceSettingsPage() {
-  const getTodayString = () => new Date().toISOString().split("T")[0];
-  const formatAmount = (value?: number | null) => {
-    if (value === null || value === undefined) {
-      return "0.00";
-    }
-    return Number(value).toFixed(2);
-  };
-  const normalizeDate = (value?: string | null) => value ?? getTodayString();
+// Move utilities outside the component
+const getTodayString = () => new Date().toISOString().split("T")[0];
 
+const formatAmount = (value?: number | null) => {
+  if (value === null || value === undefined) {
+    return "0.00";
+  }
+  return Number(value).toFixed(2);
+};
+
+const normalizeDate = (value?: string | null) => value ?? getTodayString();
+
+export default function FinanceSettingsPage() {
   const [balance, setBalance] = useState("0.00");
   const [balanceDate, setBalanceDate] = useState(getTodayString);
   const [savingsBalance, setSavingsBalance] = useState("");
@@ -59,7 +61,6 @@ export default function FinanceSettingsPage() {
         }
       } catch (error) {
         console.error("Failed to load account:", error);
-        // Assuming 404 means no account yet
         setIsNewAccount(true);
         setBalance("0.00");
         setBalanceDate(getTodayString());
@@ -68,7 +69,7 @@ export default function FinanceSettingsPage() {
       }
     }
     loadAccount();
-  }, []);
+  }, []); // Dependencies are now empty as the utilities are stable
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,16 +79,13 @@ export default function FinanceSettingsPage() {
       const balanceNum = Number.parseFloat(balance) || 0;
 
       if (isNewAccount) {
-        console.log("Creating new account...");
         await initializeAccount(balanceNum, balanceDate);
       } else {
-        console.log("Updating existing account...");
-        const result = await updateAccount({
+        await updateAccount({
           currentBalance: balanceNum,
           startingBalance: balanceNum,
           balanceAsOfDate: balanceDate,
         });
-        console.log("Account updated:", result);
       }
 
       if (savingsBalance) {
@@ -148,9 +146,6 @@ export default function FinanceSettingsPage() {
                   required
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Enter your current checking account balance
-              </p>
             </div>
 
             <div className="space-y-2">
@@ -162,9 +157,6 @@ export default function FinanceSettingsPage() {
                 onChange={(e) => setBalanceDate(e.target.value)}
                 required
               />
-              <p className="text-sm text-muted-foreground">
-                The date this balance is accurate as of
-              </p>
             </div>
 
             <div className="space-y-2">
@@ -183,9 +175,6 @@ export default function FinanceSettingsPage() {
                   className="pl-7"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Leave blank to keep your existing savings balance unchanged.
-              </p>
             </div>
 
             <div className="space-y-2">
@@ -197,9 +186,6 @@ export default function FinanceSettingsPage() {
                 onChange={(e) => setSavingsBalanceDate(e.target.value)}
                 disabled={!savingsBalance}
               />
-              <p className="text-sm text-muted-foreground">
-                The date this savings balance is accurate as of
-              </p>
             </div>
 
             <Button type="submit" className="w-full" disabled={isSaving}>

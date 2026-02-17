@@ -30,10 +30,8 @@ export function PaycheckDialog({
   open,
   onOpenChange,
 }: PaycheckDialogProps) {
-  const { paycheckForm, setPaycheckForm, handleAddPaycheck } = usePaycheckDialog(
-    onSuccess,
-    onOpenChange
-  );
+  const { paycheckForm, setPaycheckForm, handleAddPaycheck } =
+    usePaycheckDialog(onSuccess, onOpenChange);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -108,9 +106,7 @@ export function PaycheckDialog({
 
           {paycheckForm.frequency === "bimonthly" && (
             <div>
-              <Label htmlFor="secondDay">
-                Second Payday (Optional)
-              </Label>
+              <Label htmlFor="secondDay">Second Payday (Optional)</Label>
               <Input
                 id="secondDay"
                 type="number"
@@ -126,8 +122,8 @@ export function PaycheckDialog({
                 }
               />
               <p className="text-xs text-muted-foreground mt-1">
-                First payday is set by the "Start Date". This sets the
-                second payday of the month.
+                First payday is set by the "Start Date". This sets the second
+                payday of the month.
               </p>
             </div>
           )}

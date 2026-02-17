@@ -25,7 +25,7 @@ export function usePaycheckDialog(
 
       await propagatePaychecks(paycheck);
       await onSuccess();
-      
+
       // Reset form
       setPaycheckForm({
         amount: "",

@@ -16,7 +16,6 @@ from api.features.finance.models import (
 )
 
 
-
 class FinanceDashboardService:
     def get_complete_finance_data(self, user: User) -> Dict[str, Any]:
         """Get all finance data for a user"""
@@ -105,14 +104,12 @@ class FinanceDashboardService:
                     "id": transaction.id,
                     "transaction_type": transaction.transaction_type,
                     "amount": transaction.amount,
-                                        "date": transaction.date.isoformat(),
-
+                    "date": transaction.date.isoformat(),
                     "notes": transaction.notes,
                 }
                 for transaction in savings_transactions
             ],
         }
-
 
     def get_monthly_summary(
         self, user: User, start_date: date, months_count: int

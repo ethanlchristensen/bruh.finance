@@ -45,8 +45,6 @@ class SavingsTransactionController:
         if amount <= 0:
             return 400, {"error": "Amount must be greater than zero."}
 
-        transaction_date = payload.get("date")
-
         if transaction_type == "deposit":
             if (finance_account.current_balance or Decimal("0")) < amount:
                 return 400, {"error": "Insufficient checking balance for deposit."}
@@ -65,18 +63,6 @@ class SavingsTransactionController:
             ) + amount
         else:
             return 400, {"error": f"Unsupported transaction type: {transaction_type}"}
-
-        if transaction_date:
-            if (
-                not savings_account.balance_as_of_date
-                or transaction_date >= savings_account.balance_as_of_date
-            ):
-                savings_account.balance_as_of_date = transaction_date
-            if (
-                not finance_account.balance_as_of_date
-                or transaction_date >= finance_account.balance_as_of_date
-            ):
-                finance_account.balance_as_of_date = transaction_date
 
         savings_account.save()
         finance_account.save()

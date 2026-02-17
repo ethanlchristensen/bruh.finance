@@ -12,7 +12,6 @@ from api.features.finance.schemas import FinanceDataSchema
 from api.features.finance.utils import get_or_create_finance_account, get_or_create_savings_account
 
 
-
 @api_controller("/finance", auth=JWTAuth(), tags=["Finance Data"])
 class FinanceDataController:
     @route.get("", response=FinanceDataSchema)
@@ -39,4 +38,3 @@ class FinanceDataController:
             "savings_recurring_deposits": recurring_savings,
             "savings_transactions": savings_transactions,
         }
-

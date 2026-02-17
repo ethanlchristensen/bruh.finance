@@ -23,7 +23,7 @@ export function useDashboardData() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const [data, fetchedCategories] = await Promise.all([
         getFinanceData(),
         getCategories(),

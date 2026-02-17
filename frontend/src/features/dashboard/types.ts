@@ -7,7 +7,6 @@ import type {
   SavingsTransaction,
 } from "@/lib/finance-api";
 
-
 export type DashboardData = {
   financeData: FinanceData | null;
   categories: Category[];

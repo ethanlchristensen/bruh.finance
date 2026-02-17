@@ -7,7 +7,6 @@ from api.features.finance.models import (
     SavingsRecurringDeposit,
     SavingsTransaction,
 )
-
 from api.features.users.models import Profile
 
 __all__ = [
@@ -20,4 +19,3 @@ __all__ = [
     "SavingsRecurringDeposit",
     "SavingsTransaction",
 ]
-

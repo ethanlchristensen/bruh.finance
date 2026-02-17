@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { addRecurringBill, type Category } from "@/lib/finance-api";
 
 export function useBillDialog(
@@ -14,20 +14,12 @@ export function useBillDialog(
     total: "",
   });
 
-  // Set default category when categories load
-  useEffect(() => {
-    if (categories.length > 0 && !billForm.category_id) {
-      const billCategory = categories.find(
-        (cat) => cat.type === "bill" || cat.type === "general",
-      );
-      if (billCategory) {
-        setBillForm((prev) => ({
-          ...prev,
-          category_id: billCategory.id.toString(),
-        }));
-      }
-    }
-  }, [categories, billForm.category_id]);
+  const defaultCategory = categories.find(
+    (cat) => cat.type === "bill" || cat.type === "general",
+  );
+  const defaultCategoryId = defaultCategory?.id.toString() || "";
+
+  const activeCategoryId = billForm.category_id || defaultCategoryId;
 
   const handleAddBill = async () => {
     try {
@@ -35,7 +27,7 @@ export function useBillDialog(
         name: billForm.name,
         amount: Number.parseFloat(billForm.amount),
         dueDay: Number.parseInt(billForm.dueDay),
-        category_id: Number.parseInt(billForm.category_id),
+        category_id: Number.parseInt(activeCategoryId),
         ...(billForm.total && {
           total: Number.parseFloat(billForm.total),
           amountPaid: 0,
@@ -43,16 +35,12 @@ export function useBillDialog(
       };
       await addRecurringBill(bill);
       await onSuccess();
-      
-      // Reset form
+
       setBillForm({
         name: "",
         amount: "",
         dueDay: "",
-        category_id:
-          categories
-            .find((cat) => cat.type === "bill" || cat.type === "general")
-            ?.id.toString() || "",
+        category_id: "",
         total: "",
       });
       onOpenChange(false);
@@ -62,7 +50,7 @@ export function useBillDialog(
   };
 
   return {
-    billForm,
+    billForm: { ...billForm, category_id: activeCategoryId },
     setBillForm,
     handleAddBill,
   };

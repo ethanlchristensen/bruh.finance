@@ -38,7 +38,7 @@ export function ExpenseDialog({
   const { expenseForm, setExpenseForm, handleAddExpense } = useExpenseDialog(
     categories,
     onSuccess,
-    onOpenChange
+    onOpenChange,
   );
 
   return (
@@ -109,8 +109,7 @@ export function ExpenseDialog({
               <SelectContent>
                 {categories
                   .filter(
-                    (cat) =>
-                      cat.type === "expense" || cat.type === "general",
+                    (cat) => cat.type === "expense" || cat.type === "general",
                   )
                   .map((category) => (
                     <SelectItem
@@ -124,9 +123,7 @@ export function ExpenseDialog({
             </Select>
           </div>
           <div>
-            <Label htmlFor="relatedBill">
-              Apply Towards Bill (Optional)
-            </Label>
+            <Label htmlFor="relatedBill">Apply Towards Bill (Optional)</Label>
             <Select
               value={expenseForm.relatedBillId}
               onValueChange={(v) =>
@@ -141,19 +138,15 @@ export function ExpenseDialog({
                 {recurringBills
                   .filter((bill) => bill.total) // Only show bills that have a total amount to pay off
                   .map((bill) => (
-                    <SelectItem
-                      key={bill.id}
-                      value={bill.id.toString()}
-                    >
+                    <SelectItem key={bill.id} value={bill.id.toString()}>
                       {bill.name} (Total: ${bill.total})
                     </SelectItem>
                   ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground mt-1">
-              If this expense is a payment towards a debt/bill (like a
-              credit card), select it here to update the remaining
-              balance.
+              If this expense is a payment towards a debt/bill (like a credit
+              card), select it here to update the remaining balance.
             </p>
           </div>
           <Button onClick={handleAddExpense} className="w-full">

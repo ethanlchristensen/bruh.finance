@@ -13,7 +13,6 @@ from api.features.finance.controller import (
     SavingsRecurringDepositController,
     SavingsTransactionController,
 )
-
 from api.features.users.controller import AuthController, UserController
 
 api = NinjaExtraAPI()
@@ -25,7 +24,7 @@ api.register_controllers(
     ExpenseController,
     FinanceAccountController,
     FinanceDataController,
-        RecurringBillController,
+    RecurringBillController,
     PaycheckController,
     FinanceDashboardController,
     CategoryController,
@@ -33,7 +32,6 @@ api.register_controllers(
     SavingsRecurringDepositController,
     SavingsTransactionController,
 )
-
 
 
 @api.get("/hello")

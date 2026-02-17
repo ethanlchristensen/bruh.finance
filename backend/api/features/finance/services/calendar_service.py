@@ -15,8 +15,6 @@ from api.features.finance.models import (
 )
 
 
-
-
 class CalendarService:
     def generate_calendar_data(
         self,
@@ -70,9 +68,7 @@ class CalendarService:
         recurring_savings = list(
             SavingsRecurringDeposit.objects.filter(user=user, is_deleted=False)
         )
-        savings_transactions = list(
-            SavingsTransaction.objects.filter(user=user, is_deleted=False)
-        )
+        savings_transactions = list(SavingsTransaction.objects.filter(user=user, is_deleted=False))
 
         # Track bill payments for bills with totals
 
@@ -83,39 +79,29 @@ class CalendarService:
 
         # Generate calendar days
         calendar_days = []
-        running_balance = account.starting_balance
-        savings_running_balance = savings_account.starting_balance
+        running_balance = Decimal("0.00")
+        savings_running_balance = Decimal("0.00")
         current_date = calc_start_date
 
-
         while current_date <= calc_end_date:
-            should_calculate = current_date >= balance_date
+            day_bills = self._get_bills_for_date(bills, current_date, bill_payments)
+            day_paychecks = self._get_paychecks_for_date(paychecks, current_date)
+            day_expenses = self._get_expenses_for_date(expenses, current_date)
+            day_savings_transactions = self._get_savings_transactions_for_date(
+                savings_transactions, current_date
+            )
+            day_recurring_savings = self._get_recurring_savings_for_date(
+                recurring_savings, current_date
+            )
 
-            # Get items for this day
-            day_bills = (
-                self._get_bills_for_date(bills, current_date, bill_payments)
-                if should_calculate
-                else []
-            )
-            day_paychecks = (
-                self._get_paychecks_for_date(paychecks, current_date) if should_calculate else []
-            )
-            day_expenses = (
-                self._get_expenses_for_date(expenses, current_date) if should_calculate else []
-            )
-            day_savings_transactions = (
-                self._get_savings_transactions_for_date(savings_transactions, current_date)
-                if should_calculate
-                else []
-            )
-            day_recurring_savings = (
-                self._get_recurring_savings_for_date(recurring_savings, current_date)
-                if should_calculate
-                else []
-            )
+            if current_date == balance_date:
+                running_balance = account.starting_balance
+                savings_running_balance = savings_account.starting_balance
+
+            should_update_balance = current_date >= balance_date
 
             # Calculate balance changes
-            if should_calculate:
+            if should_update_balance:
                 for pc in day_paychecks:
                     running_balance += pc.amount
 
@@ -127,10 +113,7 @@ class CalendarService:
                         )
 
                 for exp in day_expenses:
-                    # Subtract expense amount from running balance
                     running_balance -= exp.amount
-
-                    # Apply expense towards related bill payoff if applicable
                     if hasattr(exp, "related_bill") and exp.related_bill:
                         related_bill_id = exp.related_bill.id
                         if related_bill_id in bill_payments:
@@ -147,7 +130,6 @@ class CalendarService:
                         savings_running_balance -= savings_txn.amount
 
                 for recurring_deposit in day_recurring_savings:
-                    # Only subtract from checking if it's NOT a payroll deposit
                     if not getattr(recurring_deposit, "is_payroll_deposit", False):
                         running_balance -= recurring_deposit.amount
                     savings_running_balance += recurring_deposit.amount
@@ -174,7 +156,7 @@ class CalendarService:
                 # Generate a unique integer ID for recurring transactions (negative to avoid collision)
                 # Format: -{deposit_id}{YYYYMMDD}
                 virtual_id = int(f"{recurring_deposit.id}{current_date.strftime('%Y%m%d')}") * -1
-                
+
                 is_payroll = getattr(recurring_deposit, "is_payroll_deposit", False)
                 source_name = recurring_deposit.name
                 if is_payroll:
@@ -196,7 +178,6 @@ class CalendarService:
             calendar_days.append(
                 {
                     "date": current_date.isoformat(),
-
                     "isCurrentMonth": True,
                     "bills": [
                         {
@@ -206,9 +187,9 @@ class CalendarService:
                             "dueDay": bill.due_day,
                             "category": bill.category,
                             "total": bill.total,
-                            "amountPaid": bill_payments.get(bill.id, Decimal("0.00"))
-                            if bill.total
-                            else None,
+                            "amountPaid": (
+                                bill_payments.get(bill.id, Decimal("0.00")) if bill.total else None
+                            ),
                         }
                         for bill in day_bills
                     ],
@@ -233,11 +214,10 @@ class CalendarService:
                         for exp in day_expenses
                     ],
                     "savingsTransactions": day_savings_entries,
-                    "runningBalance": running_balance if should_calculate else Decimal("0.00"),
-                    "savingsRunningBalance": savings_running_balance,
-
-
-
+                    "runningBalance": (running_balance if should_update_balance else 0.00),
+                    "savingsRunningBalance": (
+                        savings_running_balance if should_update_balance else 0.00
+                    ),
                 }
             )
 
@@ -246,7 +226,10 @@ class CalendarService:
         return calendar_days
 
     def _get_bills_for_date(
-        self, bills: List[RecurringBill], target_date: date, bill_payments: Dict[int, Decimal]
+        self,
+        bills: List[RecurringBill],
+        target_date: date,
+        bill_payments: Dict[int, Decimal],
     ) -> List[RecurringBill]:
         """Get bills due on a specific date"""
         # Get last day of month
@@ -426,9 +409,7 @@ class CalendarService:
         # 4. Handle Monthly (Complex logic for end-of-month dates)
         if frequency == "monthly":
             # Prefer the explicit day_of_month, fallback to start_date.day
-            day_of_month = (
-                deposit.day_of_month if deposit.day_of_month else deposit.start_date.day
-            )
+            day_of_month = deposit.day_of_month if deposit.day_of_month else deposit.start_date.day
 
             # Logic to handle short months (e.g. if day iser
             #  31st, use 30th for April)
@@ -439,12 +420,12 @@ class CalendarService:
                 last_day = (next_month - timedelta(days=1)).day
 
             target_day = min(day_of_month, last_day)
-            
+
             return target_date.day == target_day
 
         # Default: If no recurring freq matches, treat as one-time
         return target_date == deposit.start_date
-    
+
     def get_balance_projections(self, user: User, months: int = 24) -> List[Dict[str, Any]]:
         """Get balance projections for future months"""
         calendar_data = self.generate_calendar_data(user=user, months_to_show=months)

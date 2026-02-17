@@ -23,10 +23,8 @@ export function SavingsDepositDialog({
   open,
   onOpenChange,
 }: SavingsDepositDialogProps) {
-  const { savingsDepositForm, setSavingsDepositForm, handleAddSavingsDeposit } = useSavingsDepositDialog(
-    onSuccess,
-    onOpenChange
-  );
+  const { savingsDepositForm, setSavingsDepositForm, handleAddSavingsDeposit } =
+    useSavingsDepositDialog(onSuccess, onOpenChange);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,9 +73,7 @@ export function SavingsDepositDialog({
             />
           </div>
           <div>
-            <Label htmlFor="savingsDepositNotes">
-              Notes (Optional)
-            </Label>
+            <Label htmlFor="savingsDepositNotes">Notes (Optional)</Label>
             <Input
               id="savingsDepositNotes"
               placeholder="July bonus deposit"

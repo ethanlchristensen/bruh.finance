@@ -19,7 +19,7 @@ export function ActionButtons({
   const { handleCSVImport, handleExportCSV } = useActionButtons(
     onDataRefresh,
     calendarDays,
-    monthsToShow
+    monthsToShow,
   );
 
   return (

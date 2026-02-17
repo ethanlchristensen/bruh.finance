@@ -1,7 +1,4 @@
-import {
-  type CalendarDay,
-  type FinanceData,
-} from "@/lib/finance-api";
+import { type CalendarDay, type FinanceData } from "@/lib/finance-api";
 
 export function useSummaryCards(
   financeData: FinanceData,

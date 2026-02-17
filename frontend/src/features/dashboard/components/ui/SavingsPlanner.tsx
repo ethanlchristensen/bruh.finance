@@ -6,9 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
-import type { 
-  SavingsRecurringDeposit, 
-  SavingsTransaction 
+import type {
+  SavingsRecurringDeposit,
+  SavingsTransaction,
 } from "@/lib/finance-api";
 
 interface SavingsPlannerProps {
@@ -85,38 +85,36 @@ export function SavingsPlanner({
             </h3>
             {transactions.length > 0 ? (
               <div className="space-y-2">
-                {transactions
-                  .slice(0, 6)
-                  .map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="flex items-start justify-between rounded-lg border p-3"
-                    >
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium text-foreground">
-                          {transaction.transactionType === "deposit"
-                            ? "Deposit"
-                            : "Transfer to Checking"}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          ${transaction.amount.toFixed(2)} ·{" "}
-                          {new Date(transaction.date).toLocaleDateString()}
-                        </div>
-                        {transaction.notes && (
-                          <div className="text-xs text-muted-foreground">
-                            {transaction.notes}
-                          </div>
-                        )}
+                {transactions.slice(0, 6).map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-start justify-between rounded-lg border p-3"
+                  >
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-foreground">
+                        {transaction.transactionType === "deposit"
+                          ? "Deposit"
+                          : "Transfer to Checking"}
                       </div>
-                      <button
-                        onClick={() => onDeleteTransaction(transaction.id)}
-                        className="opacity-60 hover:opacity-100 transition-opacity"
-                        aria-label="Delete savings transaction"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="text-sm text-muted-foreground">
+                        ${transaction.amount.toFixed(2)} ·{" "}
+                        {new Date(transaction.date).toLocaleDateString()}
+                      </div>
+                      {transaction.notes && (
+                        <div className="text-xs text-muted-foreground">
+                          {transaction.notes}
+                        </div>
+                      )}
                     </div>
-                  ))}
+                    <button
+                      onClick={() => onDeleteTransaction(transaction.id)}
+                      className="opacity-60 hover:opacity-100 transition-opacity"
+                      aria-label="Delete savings transaction"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">

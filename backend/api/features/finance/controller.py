@@ -24,7 +24,6 @@ from api.features.finance.controllers.savings_transaction_controller import (
     SavingsTransactionController,
 )
 
-
 __all__ = [
     "ExpenseController",
     "FinanceAccountController",
@@ -32,9 +31,8 @@ __all__ = [
     "RecurringBillController",
     "PaycheckController",
     "FinanceDashboardController",
-        "CategoryController",
+    "CategoryController",
     "SavingsAccountController",
     "SavingsRecurringDepositController",
     "SavingsTransactionController",
 ]
-

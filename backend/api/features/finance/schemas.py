@@ -38,6 +38,7 @@ class SavingsRecurringDepositSchema(Schema):
     dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
     dayOfMonth: Optional[int] = Field(default=None, alias="day_of_month")
     notes: Optional[str] = None
+    isPayrollDeposit: bool = Field(default=False, alias="is_payroll_deposit")
     isDeleted: bool = Field(default=False, alias="is_deleted")
     deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
 
@@ -59,7 +60,6 @@ class SavingsTransactionSchema(Schema):
 
 
 class CategorySchema(Schema):
-
     id: Optional[int] = None
     name: str
     type: str
@@ -128,13 +128,10 @@ class FinanceDataSchema(Schema):
     savingsRecurringDeposits: List[SavingsRecurringDepositSchema] = Field(
         alias="savings_recurring_deposits"
     )
-    savingsTransactions: List[SavingsTransactionSchema] = Field(
-        alias="savings_transactions"
-    )
+    savingsTransactions: List[SavingsTransactionSchema] = Field(alias="savings_transactions")
 
 
 class CalendarDataRequestSchema(Schema):
-
     startDate: Optional[date] = None
     endDate: Optional[date] = None
     monthsToShow: int = 3
@@ -235,9 +232,7 @@ class FinanceDashboardDataSchema(Schema):
     savingsRecurringDeposits: List[SavingsRecurringDepositSchema] = Field(
         alias="savings_recurring_deposits"
     )
-    savingsTransactions: List[SavingsTransactionSchema] = Field(
-        alias="savings_transactions"
-    )
+    savingsTransactions: List[SavingsTransactionSchema] = Field(alias="savings_transactions")
 
 
 class CategoryChoicesSchema(Schema):

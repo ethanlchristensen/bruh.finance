@@ -51,7 +51,9 @@ SAVINGS_FREQUENCY_CHOICES = [
 
 
 class SavingsRecurringDeposit(SoftDeleteModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="savings_recurring_deposits")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="savings_recurring_deposits"
+    )
     savings_account = models.ForeignKey(
         SavingsAccount,
         on_delete=models.CASCADE,
@@ -59,7 +61,9 @@ class SavingsRecurringDeposit(SoftDeleteModel):
     )
     name = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    frequency = models.CharField(max_length=20, choices=SAVINGS_FREQUENCY_CHOICES, default="monthly")
+    frequency = models.CharField(
+        max_length=20, choices=SAVINGS_FREQUENCY_CHOICES, default="monthly"
+    )
     start_date = models.DateField(default=timezone.now)
     day_of_week = models.IntegerField(null=True, blank=True)
     day_of_month = models.IntegerField(null=True, blank=True)
@@ -98,7 +102,6 @@ class SavingsTransaction(SoftDeleteModel):
 
 
 TAILWIND_BG_COLOR_CHOICES = [
-
     ("red-500", "Red"),
     ("rose-500", "Rose"),
     ("orange-500", "Orange"),

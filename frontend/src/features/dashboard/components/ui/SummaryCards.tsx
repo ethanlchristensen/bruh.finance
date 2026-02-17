@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type CalendarDay, type FinanceData } from "@/lib/finance-api";
 import { useSummaryCards } from "./hooks/summary-cards/useSummaryCards";
 
@@ -20,16 +15,8 @@ export function SummaryCards({
   currentDate,
   allCalendarDays,
 }: SummaryCardsProps) {
-  const {
-    currentBalanceDisplay,
-    currentMonthEndDay,
-    projectedSavingsBalance,
-  } = useSummaryCards(
-    financeData,
-    calendarDays,
-    currentDate,
-    allCalendarDays
-  );
+  const { currentBalanceDisplay, currentMonthEndDay, projectedSavingsBalance } =
+    useSummaryCards(financeData, calendarDays, currentDate, allCalendarDays);
 
   return (
     <div className="grid gap-6 md:grid-cols-4 mb-8">
