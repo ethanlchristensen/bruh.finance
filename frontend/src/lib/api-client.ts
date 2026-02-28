@@ -6,6 +6,7 @@ type RequestConfig = {
   withCredentials?: boolean;
   maxContentLength?: number;
   maxBodyLength?: number;
+  responseType?: "json" | "blob"
 };
 
 function getTokenExpiry(token: string): number {
@@ -278,6 +279,11 @@ class ApiClient {
       }
 
       const finalResponse = await this.handleResponse(response, makeRequest);
+
+      if (config.responseType === "blob") {
+        return (await finalResponse.blob()) as unknown as T;
+      }
+
       return finalResponse.json();
     } catch (error) {
       console.error("API Client Error:", error);
