@@ -71,11 +71,21 @@ class CalendarService:
         savings_transactions = list(SavingsTransaction.objects.filter(user=user, is_deleted=False))
 
         # Track bill payments for bills with totals
-
+        # Initialize with database values
         bill_payments = {}
         for bill in bills:
             if bill.total:
                 bill_payments[bill.id] = bill.amount_paid or Decimal("0.00")
+
+        # Process ALL historical expenses to track bill payments
+        # This ensures payments made before balance_date are counted
+        for exp in expenses:
+            if hasattr(exp, "related_bill") and exp.related_bill and exp.related_bill.total:
+                related_bill_id = exp.related_bill.id
+                if related_bill_id in bill_payments:
+                    bill_payments[related_bill_id] += exp.amount
+                else:
+                    bill_payments[related_bill_id] = exp.amount
 
         # Generate calendar days
         calendar_days = []
@@ -107,19 +117,9 @@ class CalendarService:
 
                 for bill in day_bills:
                     running_balance -= bill.amount
-                    if bill.total:
-                        bill_payments[bill.id] = (
-                            bill_payments.get(bill.id, Decimal("0.00")) + bill.amount
-                        )
 
                 for exp in day_expenses:
                     running_balance -= exp.amount
-                    if hasattr(exp, "related_bill") and exp.related_bill:
-                        related_bill_id = exp.related_bill.id
-                        if related_bill_id in bill_payments:
-                            bill_payments[related_bill_id] += exp.amount
-                        elif exp.related_bill.total:
-                            bill_payments[related_bill_id] = exp.amount
 
                 for savings_txn in day_savings_transactions:
                     if savings_txn.transaction_type == "deposit":
