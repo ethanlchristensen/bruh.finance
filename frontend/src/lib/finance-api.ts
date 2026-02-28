@@ -474,7 +474,7 @@ export async function exportCSV(
     startDate: startDate,
     endDate: endDate,
     monthsToShow: monthsToShow,
-  });
+  }, { responseType: "blob" });
 
   return response;
 }
