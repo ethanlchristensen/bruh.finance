@@ -99,9 +99,19 @@ class CalendarService:
                 running_balance = account.starting_balance
                 savings_running_balance = savings_account.starting_balance
 
-            should_update_balance = current_date >= balance_date
+                        should_update_balance = current_date >= balance_date
 
-                        # Calculate balance changes
+            # Update bill_payments for ALL dates (not just after balance_date)
+            # This ensures expenses before balance_date still mark bills as paid
+            for exp in day_expenses:
+                if hasattr(exp, "related_bill") and exp.related_bill and exp.related_bill.total:
+                    related_bill_id = exp.related_bill.id
+                    if related_bill_id in bill_payments:
+                        bill_payments[related_bill_id] += exp.amount
+                    else:
+                        bill_payments[related_bill_id] = exp.amount
+
+            # Calculate balance changes (only after balance_date)
             if should_update_balance:
                 for pc in day_paychecks:
                     running_balance += pc.amount
@@ -111,15 +121,6 @@ class CalendarService:
 
                 for exp in day_expenses:
                     running_balance -= exp.amount
-                    
-                    # Update bill_payments as we process each expense
-                    # This ensures payments only affect future dates, not past dates
-                    if hasattr(exp, "related_bill") and exp.related_bill and exp.related_bill.total:
-                        related_bill_id = exp.related_bill.id
-                        if related_bill_id in bill_payments:
-                            bill_payments[related_bill_id] += exp.amount
-                        else:
-                            bill_payments[related_bill_id] = exp.amount
 
                 for savings_txn in day_savings_transactions:
                     if savings_txn.transaction_type == "deposit":
