@@ -70,7 +70,7 @@ class CalendarService:
         )
         savings_transactions = list(SavingsTransaction.objects.filter(user=user, is_deleted=False))
 
-                        # Track bill payments for bills with totals
+        # Track bill payments for bills with totals
         # Initialize with database values only
         # We'll update this as we process expenses day-by-day
         bill_payments = {}
@@ -111,6 +111,14 @@ class CalendarService:
                     else:
                         bill_payments[related_bill_id] = exp.amount
 
+            # Count recurring bill payments toward total for ALL dates
+            for bill in day_bills:
+                if bill.total:
+                    if bill.id in bill_payments:
+                        bill_payments[bill.id] += bill.amount
+                    else:
+                        bill_payments[bill.id] = bill.amount
+
             # Calculate balance changes (only after balance_date)
             if should_update_balance:
                 for pc in day_paychecks:
@@ -118,13 +126,6 @@ class CalendarService:
 
                 for bill in day_bills:
                     running_balance -= bill.amount
-                    
-                    # Also count the recurring bill payment toward the total
-                    if bill.total:
-                        if bill.id in bill_payments:
-                            bill_payments[bill.id] += bill.amount
-                        else:
-                            bill_payments[bill.id] = bill.amount
 
                 for exp in day_expenses:
                     running_balance -= exp.amount
