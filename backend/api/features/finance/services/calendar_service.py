@@ -70,22 +70,13 @@ class CalendarService:
         )
         savings_transactions = list(SavingsTransaction.objects.filter(user=user, is_deleted=False))
 
-        # Track bill payments for bills with totals
-        # Initialize with database values
+                # Track bill payments for bills with totals
+        # Initialize with database values only
+        # We'll update this as we process expenses day-by-day
         bill_payments = {}
         for bill in bills:
             if bill.total:
                 bill_payments[bill.id] = bill.amount_paid or Decimal("0.00")
-
-        # Process ALL historical expenses to track bill payments
-        # This ensures payments made before balance_date are counted
-        for exp in expenses:
-            if hasattr(exp, "related_bill") and exp.related_bill and exp.related_bill.total:
-                related_bill_id = exp.related_bill.id
-                if related_bill_id in bill_payments:
-                    bill_payments[related_bill_id] += exp.amount
-                else:
-                    bill_payments[related_bill_id] = exp.amount
 
         # Generate calendar days
         calendar_days = []
@@ -110,7 +101,7 @@ class CalendarService:
 
             should_update_balance = current_date >= balance_date
 
-            # Calculate balance changes
+                        # Calculate balance changes
             if should_update_balance:
                 for pc in day_paychecks:
                     running_balance += pc.amount
@@ -120,6 +111,15 @@ class CalendarService:
 
                 for exp in day_expenses:
                     running_balance -= exp.amount
+                    
+                    # Update bill_payments as we process each expense
+                    # This ensures payments only affect future dates, not past dates
+                    if hasattr(exp, "related_bill") and exp.related_bill and exp.related_bill.total:
+                        related_bill_id = exp.related_bill.id
+                        if related_bill_id in bill_payments:
+                            bill_payments[related_bill_id] += exp.amount
+                        else:
+                            bill_payments[related_bill_id] = exp.amount
 
                 for savings_txn in day_savings_transactions:
                     if savings_txn.transaction_type == "deposit":
@@ -243,11 +243,6 @@ class CalendarService:
         for bill in bills:
             due_day = bill.due_day
             current_day = target_date.day
-
-            if due_day == 12:
-                print(f"DEBUG: Bill '{bill.name}' due on 12th, checking date {target_date}")
-                print(f"  due_day={due_day}, current_day={current_day}")
-                print(f"  has total={bill.total}, amount_paid={bill_payments.get(bill.id, Decimal('0.00'))}")
 
             # Check if bill is due on this day
             is_correct_day = (due_day == current_day) or (
