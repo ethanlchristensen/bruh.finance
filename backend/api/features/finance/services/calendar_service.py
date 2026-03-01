@@ -244,6 +244,11 @@ class CalendarService:
             due_day = bill.due_day
             current_day = target_date.day
 
+            if due_day == 12:
+                print(f"DEBUG: Bill '{bill.name}' due on 12th, checking date {target_date}")
+                print(f"  due_day={due_day}, current_day={current_day}")
+                print(f"  has total={bill.total}, amount_paid={bill_payments.get(bill.id, Decimal('0.00'))}")
+
             # Check if bill is due on this day
             is_correct_day = (due_day == current_day) or (
                 due_day > last_day_of_month and current_day == last_day_of_month
