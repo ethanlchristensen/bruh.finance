@@ -118,6 +118,13 @@ class CalendarService:
 
                 for bill in day_bills:
                     running_balance -= bill.amount
+                    
+                    # Also count the recurring bill payment toward the total
+                    if bill.total:
+                        if bill.id in bill_payments:
+                            bill_payments[bill.id] += bill.amount
+                        else:
+                            bill_payments[bill.id] = bill.amount
 
                 for exp in day_expenses:
                     running_balance -= exp.amount
