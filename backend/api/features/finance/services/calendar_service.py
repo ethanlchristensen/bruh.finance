@@ -70,7 +70,7 @@ class CalendarService:
         )
         savings_transactions = list(SavingsTransaction.objects.filter(user=user, is_deleted=False))
 
-                # Track bill payments for bills with totals
+                        # Track bill payments for bills with totals
         # Initialize with database values only
         # We'll update this as we process expenses day-by-day
         bill_payments = {}
@@ -99,7 +99,7 @@ class CalendarService:
                 running_balance = account.starting_balance
                 savings_running_balance = savings_account.starting_balance
 
-                        should_update_balance = current_date >= balance_date
+            should_update_balance = current_date >= balance_date
 
             # Update bill_payments for ALL dates (not just after balance_date)
             # This ensures expenses before balance_date still mark bills as paid
