@@ -78,10 +78,73 @@ class CalendarService:
             if bill.total:
                 bill_payments[bill.id] = bill.amount_paid or Decimal("0.00")
 
-        # Generate calendar days
-        calendar_days = []
+        # Initialize running balances
         running_balance = Decimal("0.00")
         savings_running_balance = Decimal("0.00")
+
+        # If calc_start_date is after balance_date, we need to calculate the balance
+        # at calc_start_date by processing all transactions from balance_date to calc_start_date
+        if calc_start_date > balance_date:
+            # Start with the balance as of the balance_date
+            running_balance = account.starting_balance
+            savings_running_balance = savings_account.starting_balance
+
+            # Process all transactions from balance_date to calc_start_date (exclusive)
+            temp_date = balance_date
+            while temp_date < calc_start_date:
+                day_bills = self._get_bills_for_date(bills, temp_date, bill_payments)
+                day_paychecks = self._get_paychecks_for_date(paychecks, temp_date)
+                day_expenses = self._get_expenses_for_date(expenses, temp_date)
+                day_savings_transactions = self._get_savings_transactions_for_date(
+                    savings_transactions, temp_date
+                )
+                day_recurring_savings = self._get_recurring_savings_for_date(
+                    recurring_savings, temp_date
+                )
+
+                # Update bill_payments tracking
+                for exp in day_expenses:
+                    if hasattr(exp, "related_bill") and exp.related_bill and exp.related_bill.total:
+                        related_bill_id = exp.related_bill.id
+                        if related_bill_id in bill_payments:
+                            bill_payments[related_bill_id] += exp.amount
+                        else:
+                            bill_payments[related_bill_id] = exp.amount
+
+                for bill in day_bills:
+                    if bill.total:
+                        if bill.id in bill_payments:
+                            bill_payments[bill.id] += bill.amount
+                        else:
+                            bill_payments[bill.id] = bill.amount
+
+                # Calculate balance changes
+                for pc in day_paychecks:
+                    running_balance += pc.amount
+
+                for bill in day_bills:
+                    running_balance -= bill.amount
+
+                for exp in day_expenses:
+                    running_balance -= exp.amount
+
+                for savings_txn in day_savings_transactions:
+                    if savings_txn.transaction_type == "deposit":
+                        running_balance -= savings_txn.amount
+                        savings_running_balance += savings_txn.amount
+                    elif savings_txn.transaction_type == "transfer_to_checking":
+                        running_balance += savings_txn.amount
+                        savings_running_balance -= savings_txn.amount
+
+                for recurring_deposit in day_recurring_savings:
+                    if not getattr(recurring_deposit, "is_payroll_deposit", False):
+                        running_balance -= recurring_deposit.amount
+                    savings_running_balance += recurring_deposit.amount
+
+                temp_date += timedelta(days=1)
+
+        # Generate calendar days
+        calendar_days = []
         current_date = calc_start_date
 
         while current_date <= calc_end_date:
@@ -95,7 +158,9 @@ class CalendarService:
                 recurring_savings, current_date
             )
 
-            if current_date == balance_date:
+            # Only set initial balance if we haven't already calculated it
+            # (i.e., when export starts at or before balance_date)
+            if current_date == balance_date and calc_start_date <= balance_date:
                 running_balance = account.starting_balance
                 savings_running_balance = savings_account.starting_balance
 
