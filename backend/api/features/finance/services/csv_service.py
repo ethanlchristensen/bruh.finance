@@ -7,7 +7,7 @@ from typing import List
 from django.contrib.auth.models import User
 from ninja.files import UploadedFile
 
-from api.features.finance.models import FinanceAccount, RecurringBill
+from api.features.finance.models import Category, FinanceAccount, RecurringBill
 from api.features.finance.services.calendar_service import CalendarService
 
 
@@ -17,6 +17,10 @@ class CSVService:
 
     def import_bills_from_csv(self, file: UploadedFile, user: User) -> List[RecurringBill]:
         """Import bills from CSV file"""
+
+        default_category, _ = Category.objects.get_or_create(
+            user=user, name="Other", defaults={"type": "bill", "color": "gray-500"}
+        )
 
         # Read CSV file
         content = file.read().decode("utf-8")
@@ -66,8 +70,7 @@ class CSVService:
                 "name": description,
                 "amount": amount,
                 "due_day": due_day,
-                "category": "Other",
-                "color": "bg-gray-500",
+                "category": default_category,
             }
 
             # Add total if remaining amount exists

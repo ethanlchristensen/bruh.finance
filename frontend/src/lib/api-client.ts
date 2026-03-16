@@ -181,9 +181,14 @@ class ApiClient {
         }
       }
 
-      // If refresh failed or retry failed, redirect to login
-      console.log("[ApiClient] Redirecting to login due to auth failure...");
-      window.location.href = "/login";
+      // If refresh failed or retry failed, clear tokens and redirect to login
+      console.log(
+        "[ApiClient] Clearing tokens and redirecting to login due to auth failure...",
+      );
+      localStorage.removeItem("auth_tokens");
+      localStorage.removeItem("auth_username");
+      // Use replace to avoid adding to history
+      window.location.replace("/login");
       throw new Error("Unauthorized");
     }
 
@@ -193,7 +198,11 @@ class ApiClient {
 
       try {
         errorData = await response.json();
-        errorMessage = errorData.message || errorData.detail || errorMessage;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          errorData.detail ||
+          errorMessage;
       } catch (e) {
         console.error("ERROR: ", e);
         errorMessage = response.statusText || errorMessage;
@@ -201,7 +210,12 @@ class ApiClient {
 
       // Handle unauthorized access
       if (response.status === 401) {
-        window.location.href = "/login";
+        console.log(
+          "[ApiClient] 401 error, clearing tokens and redirecting to login...",
+        );
+        localStorage.removeItem("auth_tokens");
+        localStorage.removeItem("auth_username");
+        window.location.replace("/login");
       }
 
       throw new Error(errorMessage);

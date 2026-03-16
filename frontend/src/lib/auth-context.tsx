@@ -42,13 +42,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Use TanStack Query to fetch and cache user data
-  const { data: user, isLoading: isUserLoading } = useQuery({
+  const {
+    data: user,
+    isLoading: isUserLoading,
+    error: userError,
+  } = useQuery({
     queryKey: ["auth", "user"],
     queryFn: async () => {
       console.log("[AuthProvider] Fetching user data...");
-      const userData = await api.get<User>("/users/me");
-      console.log("[AuthProvider] User data fetched successfully");
-      return userData;
+      try {
+        const userData = await api.get<User>("/users/me");
+        console.log("[AuthProvider] User data fetched successfully");
+        return userData;
+      } catch (error) {
+        console.error("[AuthProvider] Failed to fetch user data:", error);
+        // Clear tokens if user fetch fails (user might be deleted)
+        localStorage.removeItem("auth_tokens");
+        setTokens(null);
+        throw error;
+      }
     },
     enabled: !!tokens && isInitialized, // Only fetch when we have tokens
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
@@ -98,12 +110,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } catch (error) {
             console.error("[AuthProvider] Token refresh failed:", error);
             localStorage.removeItem("auth_tokens");
+            setTokens(null);
           }
         } else {
           console.log(
             "[AuthProvider] No refresh token available, clearing tokens",
           );
           localStorage.removeItem("auth_tokens");
+          setTokens(null);
         }
       } else {
         console.log("[AuthProvider] No stored tokens found");

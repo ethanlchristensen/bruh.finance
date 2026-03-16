@@ -5,9 +5,20 @@ export const Route = createFileRoute("/_auth")({
     const tokens = localStorage.getItem("auth_tokens");
 
     if (tokens) {
-      const authTokens = JSON.parse(tokens);
-      if (authTokens.expires_at > Date.now()) {
-        throw redirect({ to: "/" });
+      try {
+        const authTokens = JSON.parse(tokens);
+        // Only redirect if token is valid and not expired
+        if (authTokens.expires_at && authTokens.expires_at > Date.now()) {
+          throw redirect({ to: "/" });
+        } else {
+          // Token expired, clear it
+          console.log("[_auth] Token expired, clearing from storage");
+          localStorage.removeItem("auth_tokens");
+        }
+      } catch (error) {
+        // Invalid token format, clear it
+        console.log("[_auth] Invalid token format, clearing from storage");
+        localStorage.removeItem("auth_tokens");
       }
     }
   },

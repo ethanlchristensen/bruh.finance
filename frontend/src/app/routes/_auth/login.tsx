@@ -23,6 +23,14 @@ function LoginPage() {
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
+  const isMountedRef = React.useRef(true);
+
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,14 +39,29 @@ function LoginPage() {
 
     try {
       await login(username, password);
-      // Navigate after successful login
+      // Don't update state after successful login, just navigate
+      // The navigation will unmount this component anyway
       navigate({ to: "/" });
-    } catch (err) {
-      console.error("Error:", err);
-      setError("Invalid username or password");
-    } finally {
-      setIsLoading(false);
+    } catch (err: any) {
+      console.error("Login error:", err);
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        const errorMessage = err?.message || "Invalid username or password";
+        setError(errorMessage);
+        setIsLoading(false);
+      }
     }
+  };
+
+  // Clear error when user types
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    if (error) setError(""); // Clear error when user starts typing
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (error) setError(""); // Clear error when user starts typing
   };
 
   return (
@@ -57,7 +80,7 @@ function LoginPage() {
               id="username"
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={handleUsernameChange}
               required
               disabled={isLoading}
               autoComplete="username"
@@ -69,7 +92,7 @@ function LoginPage() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               required
               disabled={isLoading}
               autoComplete="current-password"
