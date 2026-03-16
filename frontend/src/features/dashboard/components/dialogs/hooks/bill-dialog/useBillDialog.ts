@@ -9,7 +9,10 @@ export function useBillDialog(
   const [billForm, setBillForm] = useState({
     name: "",
     amount: "",
+    frequency: "monthly",
+    startDate: new Date().toISOString().split("T")[0],
     dueDay: "",
+    dayOfWeek: "",
     category_id: "",
     total: "",
   });
@@ -26,7 +29,17 @@ export function useBillDialog(
       const bill = {
         name: billForm.name,
         amount: Number.parseFloat(billForm.amount),
-        dueDay: Number.parseInt(billForm.dueDay),
+        frequency: billForm.frequency,
+        startDate: billForm.startDate,
+        ...(billForm.frequency === "monthly" &&
+          billForm.dueDay && {
+            dueDay: Number.parseInt(billForm.dueDay),
+          }),
+        ...((billForm.frequency === "weekly" ||
+          billForm.frequency === "biweekly") &&
+          billForm.dayOfWeek && {
+            dayOfWeek: Number.parseInt(billForm.dayOfWeek),
+          }),
         category_id: Number.parseInt(activeCategoryId),
         ...(billForm.total && {
           total: Number.parseFloat(billForm.total),
@@ -39,7 +52,10 @@ export function useBillDialog(
       setBillForm({
         name: "",
         amount: "",
+        frequency: "monthly",
+        startDate: new Date().toISOString().split("T")[0],
         dueDay: "",
+        dayOfWeek: "",
         category_id: "",
         total: "",
       });

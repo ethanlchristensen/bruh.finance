@@ -32,7 +32,7 @@ export function useExpenseDialog(
           relatedBillId: Number.parseInt(expenseForm.relatedBillId),
         }),
       };
-      
+
       await addExpense(expense);
       await onSuccess();
 

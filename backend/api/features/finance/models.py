@@ -43,11 +43,14 @@ class SavingsAccount(SoftDeleteModel):
         return f"{self.user.username}'s Savings Account"
 
 
-SAVINGS_FREQUENCY_CHOICES = [
+FREQUENCY_CHOICES = [
+    ("once", "Once"),
     ("weekly", "Weekly"),
     ("biweekly", "Bi-Weekly"),
     ("monthly", "Monthly"),
 ]
+
+SAVINGS_FREQUENCY_CHOICES = FREQUENCY_CHOICES
 
 
 class SavingsRecurringDeposit(SoftDeleteModel):
@@ -166,7 +169,21 @@ class RecurringBill(SoftDeleteModel):
     )
     name = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    due_day = models.IntegerField()
+    frequency = models.CharField(
+        max_length=20,
+        choices=FREQUENCY_CHOICES,
+        default="monthly",
+        help_text="How often this bill recurs (once, weekly, biweekly, monthly)",
+    )
+    start_date = models.DateField(default=timezone.now, help_text="The first date this bill is due")
+    due_day = models.IntegerField(
+        null=True, blank=True, help_text="Day of month for monthly bills (1-31)"
+    )
+    day_of_week = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Day of week for weekly/biweekly bills (0=Monday, 6=Sunday)",
+    )
     # Now links to the Category model
     category = models.ForeignKey(
         Category,

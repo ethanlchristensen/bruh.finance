@@ -1,8 +1,4 @@
-import type {
-  FinanceData,
-  Category,
-  CalendarDay
-} from "@/lib/finance-api";
+import type { FinanceData, Category, CalendarDay } from "@/lib/finance-api";
 
 export type DashboardData = {
   financeData: FinanceData | null;

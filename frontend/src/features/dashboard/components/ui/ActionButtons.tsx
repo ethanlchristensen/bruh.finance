@@ -3,6 +3,8 @@ import { Upload, Download, Settings } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { type CalendarDay } from "@/lib/finance-api";
 import { useActionButtons } from "./hooks/action-buttons/useActionButtons";
+import { ExportCSVDialog } from "../dialogs/ExportCSVDialog";
+import { useState } from "react";
 
 interface ActionButtonsProps {
   onDataRefresh: () => Promise<void>;
@@ -15,6 +17,7 @@ export function ActionButtons({
   calendarDays,
   monthsToShow,
 }: ActionButtonsProps) {
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const { handleCSVImport, handleExportCSV } = useActionButtons(
     onDataRefresh,
     calendarDays,
@@ -39,10 +42,20 @@ export function ActionButtons({
         onChange={handleCSVImport}
       />
 
-      <Button size="sm" variant="outline" onClick={handleExportCSV}>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => setExportDialogOpen(true)}
+      >
         <Download className="h-4 w-4 mr-2" />
         Export Report
       </Button>
+
+      <ExportCSVDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onExport={handleExportCSV}
+      />
 
       <Link to="/settings">
         <Button size="sm" variant="outline">

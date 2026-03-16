@@ -35,7 +35,10 @@ export interface RecurringBill {
   id: number;
   name: string;
   amount: number;
-  dueDay: number; // day of month (1-31)
+  frequency: "once" | "weekly" | "biweekly" | "monthly" | string;
+  startDate: string; // ISO date string
+  dueDay?: number | null; // day of month (1-31) for monthly bills
+  dayOfWeek?: number | null; // 0-6 for weekly/biweekly bills (0=Monday, 6=Sunday)
   category?: string;
   total?: number; // optional total amount for bills with a payoff amount
   amountPaid?: number; // track how much has been paid

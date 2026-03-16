@@ -6,7 +6,7 @@ type RequestConfig = {
   withCredentials?: boolean;
   maxContentLength?: number;
   maxBodyLength?: number;
-  responseType?: "json" | "blob"
+  responseType?: "json" | "blob";
 };
 
 function getTokenExpiry(token: string): number {

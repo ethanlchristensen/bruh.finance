@@ -59,6 +59,7 @@ class FinanceDashboardController:
             start_date=data.startDate,
             end_date=data.endDate,
             months_to_show=data.monthsToShow,
+            include_all_days=data.includeAllDays,
         )
 
         response = HttpResponse(csv_content, content_type="text/csv")

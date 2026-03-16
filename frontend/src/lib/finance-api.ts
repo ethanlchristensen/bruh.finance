@@ -48,7 +48,10 @@ export interface RecurringBill {
   id: number;
   name: string;
   amount: number;
-  dueDay: number;
+  frequency: "once" | "weekly" | "biweekly" | "monthly" | string;
+  startDate: string;
+  dueDay?: number | null;
+  dayOfWeek?: number | null;
   category?: Category | null;
   category_id?: number | null;
   total?: number | null;
@@ -91,7 +94,8 @@ export interface CalendarBill {
   id: number;
   name: string;
   amount: number;
-  dueDay: number;
+  frequency: string;
+  dueDay?: number | null;
   category?: Category | null;
   total?: number | null;
   amountPaid?: number | null;
@@ -469,12 +473,18 @@ export async function exportCSV(
   startDate: string,
   endDate: string,
   monthsToShow: number,
+  includeAllDays: boolean = true,
 ) {
-  const response = await api.post<Blob>("/finance/dashboard/export-csv", {
-    startDate: startDate,
-    endDate: endDate,
-    monthsToShow: monthsToShow,
-  }, { responseType: "blob" });
+  const response = await api.post<Blob>(
+    "/finance/dashboard/export-csv",
+    {
+      startDate: startDate,
+      endDate: endDate,
+      monthsToShow: monthsToShow,
+      includeAllDays: includeAllDays,
+    },
+    { responseType: "blob" },
+  );
 
   return response;
 }

@@ -51,7 +51,8 @@ export function BillDialog({
         <DialogHeader>
           <DialogTitle>Add Recurring Bill</DialogTitle>
           <DialogDescription>
-            Add a bill that repeats every month
+            Add a bill with customizable frequency (weekly, bi-weekly, or
+            monthly)
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -80,19 +81,85 @@ export function BillDialog({
             />
           </div>
           <div>
-            <Label htmlFor="dueDay">Due Day (1-31)</Label>
+            <Label htmlFor="billFrequency">Frequency</Label>
+            <Select
+              value={billForm.frequency}
+              onValueChange={(v) => setBillForm({ ...billForm, frequency: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="once">Once</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="biweekly">Bi-Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="startDate">Start Date</Label>
             <Input
-              id="dueDay"
-              type="number"
-              min="1"
-              max="31"
-              placeholder="15"
-              value={billForm.dueDay}
+              id="startDate"
+              type="date"
+              value={billForm.startDate}
               onChange={(e) =>
-                setBillForm({ ...billForm, dueDay: e.target.value })
+                setBillForm({ ...billForm, startDate: e.target.value })
               }
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              The first date this bill is due
+            </p>
           </div>
+          {billForm.frequency === "monthly" && (
+            <div>
+              <Label htmlFor="dueDay">Due Day (1-31)</Label>
+              <Input
+                id="dueDay"
+                type="number"
+                min="1"
+                max="31"
+                placeholder="15"
+                value={billForm.dueDay}
+                onChange={(e) =>
+                  setBillForm({ ...billForm, dueDay: e.target.value })
+                }
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Day of month the bill is due
+              </p>
+            </div>
+          )}
+          {(billForm.frequency === "weekly" ||
+            billForm.frequency === "biweekly") && (
+            <div>
+              <Label htmlFor="dayOfWeek">Day of Week</Label>
+              <Select
+                value={billForm.dayOfWeek}
+                onValueChange={(v) =>
+                  setBillForm({ ...billForm, dayOfWeek: v })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Monday</SelectItem>
+                  <SelectItem value="1">Tuesday</SelectItem>
+                  <SelectItem value="2">Wednesday</SelectItem>
+                  <SelectItem value="3">Thursday</SelectItem>
+                  <SelectItem value="4">Friday</SelectItem>
+                  <SelectItem value="5">Saturday</SelectItem>
+                  <SelectItem value="6">Sunday</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {billForm.frequency === "biweekly"
+                  ? "Bill occurs every 2 weeks on this day"
+                  : "Bill occurs every week on this day"}
+              </p>
+            </div>
+          )}
           <div>
             <Label htmlFor="billTotal">Total Amount (Optional)</Label>
             <Input

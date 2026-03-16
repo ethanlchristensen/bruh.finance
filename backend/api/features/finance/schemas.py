@@ -75,7 +75,10 @@ class RecurringBillSchema(Schema):
     id: Optional[int] = None
     name: str
     amount: float
-    dueDay: int = Field(alias="due_day")
+    frequency: str = "monthly"
+    startDate: date = Field(alias="start_date")
+    dueDay: Optional[int] = Field(default=None, alias="due_day")
+    dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
     category: Optional[CategorySchema] = None
     category_id: Optional[int] = None
     total: Optional[float] = None
@@ -146,6 +149,7 @@ class ExportCSVRequestSchema(Schema):
     startDate: date
     endDate: date
     monthsToShow: int = 3
+    includeAllDays: bool = True
 
 
 class BalanceProjectionRequestSchema(Schema):
@@ -156,7 +160,8 @@ class CalendarBillSchema(Schema):
     id: int
     name: str
     amount: float
-    dueDay: int
+    frequency: str
+    dueDay: Optional[int] = None
     category: Optional[CategorySchema]
     total: Optional[float] = None
     amountPaid: Optional[float] = None

@@ -87,7 +87,12 @@ class CSVService:
         return imported_bills
 
     def generate_export_csv(
-        self, user: User, start_date: date, end_date: date, months_to_show: int
+        self,
+        user: User,
+        start_date: date,
+        end_date: date,
+        months_to_show: int,
+        include_all_days: bool = True,
     ) -> str:
         """Generate CSV export of finance data"""
 
@@ -95,6 +100,19 @@ class CSVService:
         calendar_data = self.calendar_service.generate_calendar_data(
             user=user, start_date=start_date, end_date=end_date, months_to_show=months_to_show
         )
+
+        # Filter to only days with activity if requested
+        if not include_all_days:
+            calendar_data = [
+                day
+                for day in calendar_data
+                if (
+                    len(day["paychecks"]) > 0
+                    or len(day["bills"]) > 0
+                    or len(day["expenses"]) > 0
+                    or len(day["savingsTransactions"]) > 0
+                )
+            ]
 
         # Create CSV in memory
         output = io.StringIO()
@@ -123,18 +141,46 @@ class CSVService:
 
         # Write daily breakdown
         writer.writerow(["DAILY BREAKDOWN"])
-        writer.writerow(
-            [
-                "Date",
-                "Day of Week",
-                "Income",
-                "Bills",
-                "Expenses",
-                "Net Change",
-                "Balance",
-                "Details",
-            ]
-        )
+        if include_all_days:
+            writer.writerow(
+                [
+                    "Date",
+                    "Day of Week",
+                    "Income",
+                    "Bills",
+                    "Expenses",
+                    "Net Change",
+                    "Balance",
+                    "Details",
+                ]
+            )
+        else:
+            writer.writerow(
+                [
+                    "Date",
+                    "Day of Week",
+                    "Income",
+                    "Bills",
+                    "Expenses",
+                    "Net Change",
+                    "Balance",
+                    "Details",
+                ]
+            )
+            writer.writerow(["Note: Only showing days with transactions"])
+            writer.writerow([])
+            writer.writerow(
+                [
+                    "Date",
+                    "Day of Week",
+                    "Income",
+                    "Bills",
+                    "Expenses",
+                    "Net Change",
+                    "Balance",
+                    "Details",
+                ]
+            )
 
         for day in calendar_data:
             day_date = datetime.fromisoformat(day["date"])

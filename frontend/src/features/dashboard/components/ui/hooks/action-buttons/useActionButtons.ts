@@ -25,7 +25,7 @@ export function useActionButtons(
     }
   };
 
-  const handleExportCSV = async () => {
+  const handleExportCSV = async (includeAllDays: boolean = true) => {
     if (!calendarDays.length) return;
 
     try {
@@ -36,7 +36,12 @@ export function useActionButtons(
           .toISOString()
           .split("T")[0] || "end";
 
-      const blob = await exportCSV(startDate, endDate, monthsToShow);
+      const blob = await exportCSV(
+        startDate,
+        endDate,
+        monthsToShow,
+        includeAllDays,
+      );
 
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");

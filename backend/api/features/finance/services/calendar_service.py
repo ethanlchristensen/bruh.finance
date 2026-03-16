@@ -258,6 +258,7 @@ class CalendarService:
                             "id": bill.id,
                             "name": bill.name,
                             "amount": bill.amount,
+                            "frequency": bill.frequency,
                             "dueDay": bill.due_day,
                             "category": bill.category,
                             "total": bill.total,
@@ -306,34 +307,63 @@ class CalendarService:
         bill_payments: Dict[int, Decimal],
     ) -> List[RecurringBill]:
         """Get bills due on a specific date"""
-        # Get last day of month
-        if target_date.month == 12:
-            last_day_of_month = 31
-        else:
-            next_month = date(target_date.year, target_date.month + 1, 1)
-            last_day_of_month = (next_month - timedelta(days=1)).day
-
         matching_bills = []
         for bill in bills:
-            due_day = bill.due_day
-            current_day = target_date.day
+            # Check if bill is due on this day using frequency
+            if self._is_bill_on_date(bill, target_date):
+                # Check if bill is paid off
+                if bill.total:
+                    current_paid = bill_payments.get(bill.id, Decimal("0.00"))
+                    is_paid_off = current_paid >= bill.total
+                else:
+                    is_paid_off = False
 
-            # Check if bill is due on this day
-            is_correct_day = (due_day == current_day) or (
-                due_day > last_day_of_month and current_day == last_day_of_month
-            )
-
-            # Check if bill is paid off
-            if bill.total:
-                current_paid = bill_payments.get(bill.id, Decimal("0.00"))
-                is_paid_off = current_paid >= bill.total
-            else:
-                is_paid_off = False
-
-            if is_correct_day and not is_paid_off:
-                matching_bills.append(bill)
+                if not is_paid_off:
+                    matching_bills.append(bill)
 
         return matching_bills
+
+    def _is_bill_on_date(self, bill: RecurringBill, target_date: date) -> bool:
+        """Check if a bill occurs on a specific date based on frequency"""
+        # If target date is before the bill start date, it doesn't occur
+        if target_date < bill.start_date:
+            return False
+
+        frequency = bill.frequency.lower() if bill.frequency else "monthly"
+
+        if frequency == "once":
+            return target_date == bill.start_date
+
+        elif frequency == "weekly":
+            # Occurs every 7 days from start_date
+            days_diff = (target_date - bill.start_date).days
+            return days_diff >= 0 and days_diff % 7 == 0
+
+        elif frequency == "biweekly":
+            # Occurs every 14 days from start_date
+            days_diff = (target_date - bill.start_date).days
+            return days_diff >= 0 and days_diff % 14 == 0
+
+        elif frequency == "monthly":
+            # Occurs on the same day each month
+            if bill.due_day:
+                # Get last day of month
+                if target_date.month == 12:
+                    last_day_of_month = 31
+                else:
+                    next_month = date(target_date.year, target_date.month + 1, 1)
+                    last_day_of_month = (next_month - timedelta(days=1)).day
+
+                # Check if bill is due on this day
+                is_correct_day = (bill.due_day == target_date.day) or (
+                    bill.due_day > last_day_of_month and target_date.day == last_day_of_month
+                )
+                return is_correct_day and target_date >= bill.start_date
+            # Fallback: use start_date's day of month
+            return target_date.day == bill.start_date.day and target_date >= bill.start_date
+
+        # Default: only on the exact date
+        return target_date == bill.start_date
 
     def _get_paychecks_for_date(
         self, paychecks: List[Paycheck], target_date: date
