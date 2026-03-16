@@ -68,8 +68,18 @@ export function BillRow({ bill, onEdit, onDelete }: BillRowProps) {
         ${bill.amount.toFixed(2)}
       </TableCell>
       <TableCell className="text-muted-foreground">
-        {bill.dueDay}
-        {getOrdinalSuffix(bill.dueDay)} of each month
+        {bill.frequency === "monthly" && bill.dueDay ? (
+          <>
+            {bill.dueDay}
+            {getOrdinalSuffix(bill.dueDay)} of each month
+          </>
+        ) : bill.frequency === "biweekly" ? (
+          "Every 2 weeks"
+        ) : bill.frequency === "weekly" ? (
+          "Every week"
+        ) : (
+          "Once"
+        )}
       </TableCell>
       <TableCell>
         {bill.total != null && bill.amountPaid != null ? (

@@ -6,9 +6,25 @@ interface BillsSummaryProps {
 }
 
 export function BillsSummary({ bills }: BillsSummaryProps) {
-  const totalMonthly = bills.reduce((sum, b) => sum + b.amount, 0);
+  // Calculate total monthly (for monthly bills only, approximate for others)
+  const totalMonthly = bills.reduce((sum, b) => {
+    if (b.frequency === "monthly" || !b.frequency) {
+      return sum + b.amount;
+    } else if (b.frequency === "biweekly") {
+      // Biweekly: ~2.17 payments per month (26 payments per year / 12 months)
+      return sum + b.amount * 2.17;
+    } else if (b.frequency === "weekly") {
+      // Weekly: ~4.33 payments per month (52 payments per year / 12 months)
+      return sum + b.amount * 4.33;
+    }
+    return sum;
+  }, 0);
+
   const totalAnnual = totalMonthly * 12;
+
+  // Count upcoming bills (only for monthly bills with dueDay)
   const upcomingCount = bills.filter((b) => {
+    if (b.frequency !== "monthly" || !b.dueDay) return false;
     const today = new Date().getDate();
     return b.dueDay >= today && b.dueDay <= today + 7;
   }).length;
