@@ -238,12 +238,20 @@ class CSVService:
             monthly_data[month_key]["income"] += sum(
                 Decimal(str(pc["amount"])) for pc in day["paychecks"]
             )
-            monthly_data[month_key]["bills"] += sum(
-                Decimal(str(bill["amount"])) for bill in day["bills"]
+
+            # Separate bills and bill-related expenses
+            total_bills = sum(Decimal(str(bill["amount"])) for bill in day["bills"])
+            total_bill_related_expenses = sum(
+                exp["amount"]
+                for exp in day["expenses"]
+                if hasattr(exp, "related_bill") and exp.related_bill
             )
+
+            monthly_data[month_key]["bills"] += total_bills - total_bill_related_expenses
             monthly_data[month_key]["expenses"] += sum(
                 Decimal(str(exp["amount"])) for exp in day["expenses"]
             )
+
             monthly_data[month_key]["end_balance"] = day["runningBalance"]
 
         # Calculate net for each month
