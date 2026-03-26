@@ -10,9 +10,15 @@ from api.features.finance.utils import (
     get_or_create_finance_account,
     get_or_create_savings_account,
 )
+from api.features.users.permissons import IsApproved
 
 
-@api_controller("/finance/savings/transactions", auth=JWTAuth(), tags=["Savings Transactions"])
+@api_controller(
+    "/finance/savings/transactions",
+    auth=JWTAuth(),
+    tags=["Savings Transactions"],
+    permissions=[IsApproved],
+)
 class SavingsTransactionController:
     @route.get("", response=List[SavingsTransactionSchema])
     def list_transactions(self, request):

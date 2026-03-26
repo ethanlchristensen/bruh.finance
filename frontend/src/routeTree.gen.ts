@@ -19,6 +19,7 @@ import { Route as ProtectedCategoriesRouteImport } from "./app/routes/_protected
 import { Route as ProtectedBillsRouteImport } from "./app/routes/_protected/bills";
 import { Route as AuthRegisterRouteImport } from "./app/routes/_auth/register";
 import { Route as AuthLoginRouteImport } from "./app/routes/_auth/login";
+import { Route as ProtectedAdminIndexRouteImport } from "./app/routes/_protected/admin/index";
 import { Route as ProtectedSettingsFinanceRouteImport } from "./app/routes/_protected/settings/finance";
 
 const ProtectedRoute = ProtectedRouteImport.update({
@@ -69,6 +70,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: "/login",
   getParentRoute: () => AuthRoute,
 } as any);
+const ProtectedAdminIndexRoute = ProtectedAdminIndexRouteImport.update({
+  id: "/admin/",
+  path: "/admin/",
+  getParentRoute: () => ProtectedRoute,
+} as any);
 const ProtectedSettingsFinanceRoute =
   ProtectedSettingsFinanceRouteImport.update({
     id: "/finance",
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   "/settings": typeof ProtectedSettingsRouteWithChildren;
   "/": typeof ProtectedIndexRoute;
   "/settings/finance": typeof ProtectedSettingsFinanceRoute;
+  "/admin": typeof ProtectedAdminIndexRoute;
 }
 export interface FileRoutesByTo {
   "/login": typeof AuthLoginRoute;
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   "/settings": typeof ProtectedSettingsRouteWithChildren;
   "/": typeof ProtectedIndexRoute;
   "/settings/finance": typeof ProtectedSettingsFinanceRoute;
+  "/admin": typeof ProtectedAdminIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   "/_protected/settings": typeof ProtectedSettingsRouteWithChildren;
   "/_protected/": typeof ProtectedIndexRoute;
   "/_protected/settings/finance": typeof ProtectedSettingsFinanceRoute;
+  "/_protected/admin/": typeof ProtectedAdminIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -123,7 +132,8 @@ export interface FileRouteTypes {
     | "/profile"
     | "/settings"
     | "/"
-    | "/settings/finance";
+    | "/settings/finance"
+    | "/admin";
   fileRoutesByTo: FileRoutesByTo;
   to:
     | "/login"
@@ -134,7 +144,8 @@ export interface FileRouteTypes {
     | "/profile"
     | "/settings"
     | "/"
-    | "/settings/finance";
+    | "/settings/finance"
+    | "/admin";
   id:
     | "__root__"
     | "/_auth"
@@ -147,7 +158,8 @@ export interface FileRouteTypes {
     | "/_protected/profile"
     | "/_protected/settings"
     | "/_protected/"
-    | "/_protected/settings/finance";
+    | "/_protected/settings/finance"
+    | "/_protected/admin/";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -227,6 +239,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AuthLoginRouteImport;
       parentRoute: typeof AuthRoute;
     };
+    "/_protected/admin/": {
+      id: "/_protected/admin/";
+      path: "/admin";
+      fullPath: "/admin";
+      preLoaderRoute: typeof ProtectedAdminIndexRouteImport;
+      parentRoute: typeof ProtectedRoute;
+    };
     "/_protected/settings/finance": {
       id: "/_protected/settings/finance";
       path: "/finance";
@@ -267,6 +286,7 @@ interface ProtectedRouteChildren {
   ProtectedProfileRoute: typeof ProtectedProfileRoute;
   ProtectedSettingsRoute: typeof ProtectedSettingsRouteWithChildren;
   ProtectedIndexRoute: typeof ProtectedIndexRoute;
+  ProtectedAdminIndexRoute: typeof ProtectedAdminIndexRoute;
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
@@ -276,6 +296,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRouteWithChildren,
   ProtectedIndexRoute: ProtectedIndexRoute,
+  ProtectedAdminIndexRoute: ProtectedAdminIndexRoute,
 };
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(

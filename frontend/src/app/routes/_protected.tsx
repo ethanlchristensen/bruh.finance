@@ -5,6 +5,7 @@ import { ContentLayout } from "@/components/layouts";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
 import { useNavigate, useMatches } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_protected")({
   beforeLoad: ({ location }) => {
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/_protected")({
 });
 
 function ProtectedLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const navigate = useNavigate();
   const matches = useMatches();
 

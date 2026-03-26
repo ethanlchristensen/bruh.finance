@@ -5,9 +5,12 @@ from ninja_jwt.authentication import JWTAuth
 
 from api.features.finance.models import Category, FinanceAccount, RecurringBill
 from api.features.finance.schemas import RecurringBillSchema
+from api.features.users.permissons import IsApproved
 
 
-@api_controller("/finance/recurring-bills", auth=JWTAuth(), tags=["Recurring Bills"])
+@api_controller(
+    "/finance/recurring-bills", auth=JWTAuth(), tags=["Recurring Bills"], permissions=[IsApproved]
+)
 class RecurringBillController:
     @route.get("", response=List[RecurringBillSchema])
     def list_bills(self, request):

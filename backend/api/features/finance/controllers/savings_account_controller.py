@@ -3,9 +3,12 @@ from ninja_jwt.authentication import JWTAuth
 
 from api.features.finance.schemas import SavingsAccountSchema
 from api.features.finance.utils import get_or_create_savings_account
+from api.features.users.permissons import IsApproved
 
 
-@api_controller("/finance/savings/account", auth=JWTAuth(), tags=["Savings Account"])
+@api_controller(
+    "/finance/savings/account", auth=JWTAuth(), tags=["Savings Account"], permissions=[IsApproved]
+)
 class SavingsAccountController:
     @route.get("", response=SavingsAccountSchema)
     def get_account(self, request):

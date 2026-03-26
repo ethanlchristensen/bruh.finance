@@ -6,10 +6,14 @@ from ninja_jwt.authentication import JWTAuth
 from api.features.finance.models import SavingsRecurringDeposit
 from api.features.finance.schemas import SavingsRecurringDepositSchema
 from api.features.finance.utils import get_or_create_savings_account
+from api.features.users.permissons import IsApproved
 
 
 @api_controller(
-    "/finance/savings/recurring-deposits", auth=JWTAuth(), tags=["Savings Recurring Deposits"]
+    "/finance/savings/recurring-deposits",
+    auth=JWTAuth(),
+    tags=["Savings Recurring Deposits"],
+    permissions=[IsApproved],
 )
 class SavingsRecurringDepositController:
     @route.get("", response=List[SavingsRecurringDepositSchema])

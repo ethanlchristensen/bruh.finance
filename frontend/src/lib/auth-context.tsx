@@ -16,7 +16,7 @@ interface AuthContextType {
   user: User | null;
   tokens: AuthTokens | null;
   login: (username: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  register: (data: RegisterData) => Promise<{ message: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
@@ -131,29 +131,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     console.log("[AuthProvider] Logging in user:", username);
-    const data = await api.post<{
-      username: string;
-      access: string;
-      refresh: string;
-    }>("/token/pair", { username, password });
+    try {
+      const data = await api.post<{
+        username: string;
+        access: string;
+        refresh: string;
+      }>("/token/pair", { username, password });
 
-    const expiresAt = getTokenExpiry(data.access);
+      const expiresAt = getTokenExpiry(data.access);
 
-    const authTokens: AuthTokens = {
-      access: data.access,
-      refresh: data.refresh,
-      expires_at: expiresAt,
-    };
+      const authTokens: AuthTokens = {
+        access: data.access,
+        refresh: data.refresh,
+        expires_at: expiresAt,
+      };
 
-    setTokens(authTokens);
-    localStorage.setItem("auth_tokens", JSON.stringify(authTokens));
-    console.log(
-      "[AuthProvider] Login successful! Token expires:",
-      new Date(expiresAt).toLocaleString(),
-    );
+      setTokens(authTokens);
+      localStorage.setItem("auth_tokens", JSON.stringify(authTokens));
+      console.log(
+        "[AuthProvider] Login successful! Token expires:",
+        new Date(expiresAt).toLocaleString(),
+      );
 
-    // Invalidate and refetch user data
-    await queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
+      // Invalidate and refetch user data
+      await queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
+    } catch (error: any) {
+      console.error("[AuthProvider] Login failed:", error);
+      if (error.response?.status === 401) {
+        throw new Error("Invalid credentials or account pending approval.");
+      }
+      throw error;
+    }
   };
 
   const register = async (data: RegisterData) => {
@@ -161,6 +169,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api.post("/auth/register", data);
       console.log("[AuthProvider] Registration successful!");
+      return {
+        message:
+          "Registration request submitted. An administrator will review your request.",
+      };
     } catch (error: any) {
       console.error("[AuthProvider] Registration failed:", error);
       const errorMessage = error.response?.data?.detail || error.message;

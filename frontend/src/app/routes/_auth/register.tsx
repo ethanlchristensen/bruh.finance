@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_auth/register")({
   component: RegisterPage,
@@ -29,6 +30,7 @@ function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",
@@ -74,14 +76,39 @@ function RegisterPage() {
         last_name: formData.last_name,
       });
 
-      // Redirect to login page on success
-      navigate({ to: "/login" });
+      setIsSuccess(true);
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <CheckCircle2 className="h-12 w-12 text-green-500" />
+          </div>
+          <CardTitle className="text-2xl">Request Submitted</CardTitle>
+          <CardDescription>
+            Your registration request has been received and is pending
+            administrator approval.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-center text-muted-foreground">
+            You will be able to log in once your account has been reviewed and
+            approved.
+          </p>
+          <Button asChild className="w-full">
+            <Link to="/login">Return to Login</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md">

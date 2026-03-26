@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChartBarBig, Receipt, Tags } from "lucide-react";
+import { ChartBarBig, Receipt, Tags, Users } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -34,6 +34,13 @@ const data = {
       icon: Tags,
       isActive: false,
     },
+    {
+      title: "Admin",
+      url: "/admin",
+      icon: Users,
+      isActive: false,
+      adminOnly: true,
+    },
   ],
 };
 
@@ -59,24 +66,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroup>
             <SidebarGroupContent className="px-1.5 md:px-0">
               <SidebarMenu>
-                {data.navMain.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      tooltip={{
-                        children: item.title,
-                        hidden: false,
-                      }}
-                      asChild
-                      isActive={activeItem?.title === item.title}
-                      className="px-2.5 md:px-2"
-                    >
-                      <Link to={item.url} search={{}}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {data.navMain
+                  .filter((item) => !item.adminOnly || user?.is_staff)
+                  .map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        tooltip={{
+                          children: item.title,
+                          hidden: false,
+                        }}
+                        asChild
+                        isActive={activeItem?.title === item.title}
+                        className="px-2.5 md:px-2"
+                      >
+                        <Link to={item.url} search={{}}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

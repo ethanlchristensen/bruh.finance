@@ -5,9 +5,10 @@ from ninja_jwt.authentication import JWTAuth
 
 from api.features.finance.models import Category, FinanceAccount, Paycheck
 from api.features.finance.schemas import PaycheckSchema
+from api.features.users.permissons import IsApproved
 
 
-@api_controller("/finance/paychecks", auth=JWTAuth(), tags=["Paychecks"])
+@api_controller("/finance/paychecks", auth=JWTAuth(), tags=["Paychecks"], permissions=[IsApproved])
 class PaycheckController:
     @route.get("", response=List[PaycheckSchema])
     def list_paychecks(self, request):

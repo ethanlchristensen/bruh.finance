@@ -39,29 +39,24 @@ function LoginPage() {
 
     try {
       await login(username, password);
-      // Don't update state after successful login, just navigate
-      // The navigation will unmount this component anyway
+      // Only navigate if login was genuinely successful and threw no errors
       navigate({ to: "/" });
     } catch (err: any) {
       console.error("Login error:", err);
-      // Only update state if component is still mounted
-      if (isMountedRef.current) {
-        const errorMessage = err?.message || "Invalid username or password";
-        setError(errorMessage);
-        setIsLoading(false);
-      }
+      // Update state without relying on isMountedRef for this specific flow
+      const errorMessage = err?.message || "Invalid username or password";
+      setError(errorMessage);
+      setIsLoading(false);
     }
   };
 
-  // Clear error when user types
+  // Update username without clearing error automatically to prevent autofill bugs
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
-    if (error) setError(""); // Clear error when user starts typing
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (error) setError(""); // Clear error when user starts typing
   };
 
   return (
@@ -99,7 +94,7 @@ function LoginPage() {
             />
           </div>
           {error && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive font-medium border border-destructive/20">
               {error}
             </div>
           )}

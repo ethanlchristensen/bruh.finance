@@ -18,9 +18,12 @@ from api.features.finance.schemas import (
 from api.features.finance.services.calendar_service import CalendarService
 from api.features.finance.services.csv_service import CSVService
 from api.features.finance.services.finance_dashboard_service import FinanceDashboardService
+from api.features.users.permissons import IsApproved
 
 
-@api_controller("/finance/dashboard", auth=JWTAuth(), tags=["Finance Dashboard"])
+@api_controller(
+    "/finance/dashboard", auth=JWTAuth(), tags=["Finance Dashboard"], permissions=[IsApproved]
+)
 class FinanceDashboardController:
     def __init__(self):
         self.dashboard_service = FinanceDashboardService()

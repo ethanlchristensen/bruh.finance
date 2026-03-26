@@ -161,9 +161,14 @@ class ApiClient {
 
   private async handleResponse(
     response: Response,
+    endpoint: string,
     retryRequest?: () => Promise<Response>,
   ) {
-    if (response.status === 401 && retryRequest) {
+    if (
+      response.status === 401 &&
+      retryRequest &&
+      !endpoint.includes("/token/pair")
+    ) {
       console.log(
         "[ApiClient] Received 401 error, attempting token refresh as fallback...",
       );
@@ -208,8 +213,8 @@ class ApiClient {
         errorMessage = response.statusText || errorMessage;
       }
 
-      // Handle unauthorized access
-      if (response.status === 401) {
+      // Handle unauthorized access, but NOT for the login endpoint
+      if (response.status === 401 && !endpoint.includes("/token/pair")) {
         console.log(
           "[ApiClient] 401 error, clearing tokens and redirecting to login...",
         );
@@ -218,7 +223,10 @@ class ApiClient {
         window.location.replace("/login");
       }
 
-      throw new Error(errorMessage);
+      // Important: Ensure we throw the error with the correct response payload for the login screen
+      const error = new Error(errorMessage) as any;
+      error.response = { status: response.status, data: errorData };
+      throw error;
     }
     return response;
   }
@@ -252,7 +260,11 @@ class ApiClient {
       });
 
     const response = await makeRequest();
-    const finalResponse = await this.handleResponse(response, makeRequest);
+    const finalResponse = await this.handleResponse(
+      response,
+      endpoint,
+      makeRequest,
+    );
     return finalResponse.json();
   }
 
@@ -287,12 +299,20 @@ class ApiClient {
       const response = await makeRequest();
 
       if (config.headers?.Accept === "text/event-stream") {
-        const finalResponse = await this.handleResponse(response, makeRequest);
+        const finalResponse = await this.handleResponse(
+          response,
+          endpoint,
+          makeRequest,
+        );
         console.log("[ApiClient] Returning streaming response body");
         return finalResponse.body as unknown as T;
       }
 
-      const finalResponse = await this.handleResponse(response, makeRequest);
+      const finalResponse = await this.handleResponse(
+        response,
+        endpoint,
+        makeRequest,
+      );
 
       if (config.responseType === "blob") {
         return (await finalResponse.blob()) as unknown as T;
@@ -317,7 +337,11 @@ class ApiClient {
       });
 
     const response = await makeRequest();
-    const finalResponse = await this.handleResponse(response, makeRequest);
+    const finalResponse = await this.handleResponse(
+      response,
+      endpoint,
+      makeRequest,
+    );
     return finalResponse.json();
   }
 
@@ -342,7 +366,11 @@ class ApiClient {
     };
 
     const response = await makeRequest();
-    const finalResponse = await this.handleResponse(response, makeRequest);
+    const finalResponse = await this.handleResponse(
+      response,
+      endpoint,
+      makeRequest,
+    );
     return finalResponse.json();
   }
 
@@ -357,7 +385,11 @@ class ApiClient {
       });
 
     const response = await makeRequest();
-    const finalResponse = await this.handleResponse(response, makeRequest);
+    const finalResponse = await this.handleResponse(
+      response,
+      endpoint,
+      makeRequest,
+    );
 
     const text = await finalResponse.text();
     return text ? JSON.parse(text) : (undefined as T);

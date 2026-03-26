@@ -16,6 +16,7 @@ export type Meta = {
 export interface UserProfile {
   bio: string;
   profile_image: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
   default_model: string;
   default_provider: string;
   default_aux_model: string;

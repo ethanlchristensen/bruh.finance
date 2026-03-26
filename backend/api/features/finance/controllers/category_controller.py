@@ -5,9 +5,12 @@ from ninja_jwt.authentication import JWTAuth
 
 from api.features.finance.models import CATEGORY_TYPE_CHOICES, TAILWIND_BG_COLOR_CHOICES, Category
 from api.features.finance.schemas import CategoryChoicesSchema, CategorySchema
+from api.features.users.permissons import IsApproved
 
 
-@api_controller("/finance/categories", auth=JWTAuth(), tags=["Categories"])
+@api_controller(
+    "/finance/categories", auth=JWTAuth(), tags=["Categories"], permissions=[IsApproved]
+)
 class CategoryController:
     @route.get("", response=List[CategorySchema])
     def list_categories(self, request):

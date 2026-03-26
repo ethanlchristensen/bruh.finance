@@ -5,9 +5,10 @@ from ninja_jwt.authentication import JWTAuth
 
 from api.features.finance.models import Category, Expense, FinanceAccount
 from api.features.finance.schemas import ExpenseSchema
+from api.features.users.permissons import IsApproved
 
 
-@api_controller("/finance/expenses", auth=JWTAuth(), tags=["Expenses"])
+@api_controller("/finance/expenses", auth=JWTAuth(), tags=["Expenses"], permissions=[IsApproved])
 class ExpenseController:
     @route.get("", response=List[ExpenseSchema])
     def list_expenses(self, request):

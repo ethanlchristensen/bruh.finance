@@ -9,7 +9,9 @@ export const Route = createFileRoute("/_auth")({
         const authTokens = JSON.parse(tokens);
         // Only redirect if token is valid and not expired
         if (authTokens.expires_at && authTokens.expires_at > Date.now()) {
-          throw redirect({ to: "/" });
+          // REMOVED THROW REDIRECT TO PREVENT RACECONDITION
+          // The router was trying to redirect because of the token before the 401 error could render
+          return;
         } else {
           // Token expired, clear it
           console.log("[_auth] Token expired, clearing from storage");

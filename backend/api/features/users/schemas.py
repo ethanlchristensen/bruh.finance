@@ -7,6 +7,7 @@ from ninja import Schema
 class ProfileSchema(Schema):
     bio: Optional[str] = None
     profile_image: Optional[str] = None
+    status: str
 
     @staticmethod
     def resolve_profile_image(obj):
