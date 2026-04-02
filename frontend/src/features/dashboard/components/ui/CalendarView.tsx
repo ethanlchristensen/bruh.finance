@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, CalendarIcon, Trash2 } from "lucide-react";
+import { CalendarIcon, Trash2 } from "lucide-react";
 import type { CalendarDay } from "@/lib/finance-api";
 
 interface CalendarViewProps {
