@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChartBarBig, Receipt, Tags, Users } from "lucide-react";
+import { ChartBarBig, CreditCard, Receipt, Tags, Users } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -26,6 +26,12 @@ const data = {
       title: "Bills",
       url: "/bills",
       icon: Receipt,
+      isActive: false,
+    },
+    {
+      title: "Expenses",
+      url: "/expenses",
+      icon: CreditCard,
       isActive: false,
     },
     {

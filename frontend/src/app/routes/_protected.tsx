@@ -32,6 +32,7 @@ function ProtectedLayout() {
       match.pathname === "/" ||
       match.pathname.startsWith("/chat/") ||
       match.pathname.startsWith("/bills") ||
+      match.pathname.startsWith("/expenses") ||
       match.pathname.startsWith("/dashboard"),
   );
 

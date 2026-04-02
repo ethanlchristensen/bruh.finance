@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from "./app/routes/_auth";
 import { Route as ProtectedIndexRouteImport } from "./app/routes/_protected/index";
 import { Route as ProtectedSettingsRouteImport } from "./app/routes/_protected/settings";
 import { Route as ProtectedProfileRouteImport } from "./app/routes/_protected/profile";
+import { Route as ProtectedExpensesRouteImport } from "./app/routes/_protected/expenses";
 import { Route as ProtectedDashboardRouteImport } from "./app/routes/_protected/dashboard";
 import { Route as ProtectedCategoriesRouteImport } from "./app/routes/_protected/categories";
 import { Route as ProtectedBillsRouteImport } from "./app/routes/_protected/bills";
@@ -43,6 +44,11 @@ const ProtectedSettingsRoute = ProtectedSettingsRouteImport.update({
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
   id: "/profile",
   path: "/profile",
+  getParentRoute: () => ProtectedRoute,
+} as any);
+const ProtectedExpensesRoute = ProtectedExpensesRouteImport.update({
+  id: "/expenses",
+  path: "/expenses",
   getParentRoute: () => ProtectedRoute,
 } as any);
 const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   "/bills": typeof ProtectedBillsRoute;
   "/categories": typeof ProtectedCategoriesRoute;
   "/dashboard": typeof ProtectedDashboardRoute;
+  "/expenses": typeof ProtectedExpensesRoute;
   "/profile": typeof ProtectedProfileRoute;
   "/settings": typeof ProtectedSettingsRouteWithChildren;
   "/": typeof ProtectedIndexRoute;
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   "/bills": typeof ProtectedBillsRoute;
   "/categories": typeof ProtectedCategoriesRoute;
   "/dashboard": typeof ProtectedDashboardRoute;
+  "/expenses": typeof ProtectedExpensesRoute;
   "/profile": typeof ProtectedProfileRoute;
   "/settings": typeof ProtectedSettingsRouteWithChildren;
   "/": typeof ProtectedIndexRoute;
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   "/_protected/bills": typeof ProtectedBillsRoute;
   "/_protected/categories": typeof ProtectedCategoriesRoute;
   "/_protected/dashboard": typeof ProtectedDashboardRoute;
+  "/_protected/expenses": typeof ProtectedExpensesRoute;
   "/_protected/profile": typeof ProtectedProfileRoute;
   "/_protected/settings": typeof ProtectedSettingsRouteWithChildren;
   "/_protected/": typeof ProtectedIndexRoute;
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | "/bills"
     | "/categories"
     | "/dashboard"
+    | "/expenses"
     | "/profile"
     | "/settings"
     | "/"
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | "/bills"
     | "/categories"
     | "/dashboard"
+    | "/expenses"
     | "/profile"
     | "/settings"
     | "/"
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | "/_protected/bills"
     | "/_protected/categories"
     | "/_protected/dashboard"
+    | "/_protected/expenses"
     | "/_protected/profile"
     | "/_protected/settings"
     | "/_protected/"
@@ -202,6 +214,13 @@ declare module "@tanstack/react-router" {
       path: "/profile";
       fullPath: "/profile";
       preLoaderRoute: typeof ProtectedProfileRouteImport;
+      parentRoute: typeof ProtectedRoute;
+    };
+    "/_protected/expenses": {
+      id: "/_protected/expenses";
+      path: "/expenses";
+      fullPath: "/expenses";
+      preLoaderRoute: typeof ProtectedExpensesRouteImport;
       parentRoute: typeof ProtectedRoute;
     };
     "/_protected/dashboard": {
@@ -283,6 +302,7 @@ interface ProtectedRouteChildren {
   ProtectedBillsRoute: typeof ProtectedBillsRoute;
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute;
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute;
+  ProtectedExpensesRoute: typeof ProtectedExpensesRoute;
   ProtectedProfileRoute: typeof ProtectedProfileRoute;
   ProtectedSettingsRoute: typeof ProtectedSettingsRouteWithChildren;
   ProtectedIndexRoute: typeof ProtectedIndexRoute;
@@ -293,6 +313,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedBillsRoute: ProtectedBillsRoute,
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
+  ProtectedExpensesRoute: ProtectedExpensesRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRouteWithChildren,
   ProtectedIndexRoute: ProtectedIndexRoute,
