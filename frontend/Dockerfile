@@ -1,21 +1,23 @@
 # Build stage
-FROM node:20-alpine AS build
+# Using slim instead of alpine for better native module compatibility
+FROM node:20-slim AS build
 
 WORKDIR /app
 
 # Accept build arguments
 ARG VITE_APP_BACKEND_API_URL
 ARG VITE_APP_BACKEND_API_VERSION
-
-# Set as environment variables for Vite
 ENV VITE_APP_BACKEND_API_URL=$VITE_APP_BACKEND_API_URL
 ENV VITE_APP_BACKEND_API_VERSION=$VITE_APP_BACKEND_API_VERSION
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install && npm install @rolldown/binding-linux-arm64-musl
+# The "Universal Fix":
+# 1. We delete the lockfile inside the container so npm doesn't use the Windows settings
+# 2. We install fresh for the container's architecture
+RUN rm -f package-lock.json && \
+    npm install --platform=linux --arch=arm64
 
 # Copy source code
 COPY . .
@@ -25,13 +27,7 @@ RUN npm run build
 
 # Production stage
 FROM nginx:alpine
-
-# Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built assets from Vite
 COPY --from=build /app/dist /usr/share/nginx/html
-
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
