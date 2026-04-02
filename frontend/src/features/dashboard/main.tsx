@@ -81,22 +81,16 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 overflow-hidden">
-      <main className="h-full p-4 flex flex-col gap-4 max-w-7xl mx-auto w-full">
+      <main className="h-full p-4 flex flex-col gap-2 max-w-7xl mx-auto w-full">
         <SummaryCards
           financeData={financeData}
           calendarDays={calendarDays}
           currentDate={currentDate}
           allCalendarDays={allCalendarDays}
         />
-
+        
         <div className="flex justify-between items-center bg-card rounded-lg border p-2 px-4 shrink-0">
           <div className="flex items-center gap-2">
-            <Label
-              htmlFor="months-select"
-              className="text-sm font-medium whitespace-nowrap"
-            >
-              Show Months:
-            </Label>
             <Select
               value={monthsToShow.toString()}
               onValueChange={(v) => setMonthsToShow(Number.parseInt(v))}
@@ -116,7 +110,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 mr-2">
+            <div className="flex items-center gap-1">
               <Button
                 variant="outline"
                 size="icon"
