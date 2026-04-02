@@ -15,7 +15,7 @@ ENV VITE_APP_BACKEND_API_VERSION=$VITE_APP_BACKEND_API_VERSION
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install && npm install @rolldown/binding-linux-arm64-musl
 
 # Copy source code
 COPY . .
