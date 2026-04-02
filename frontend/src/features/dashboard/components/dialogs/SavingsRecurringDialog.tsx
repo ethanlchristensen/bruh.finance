@@ -23,12 +23,14 @@ interface SavingsRecurringDialogProps {
   onSuccess: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 export function SavingsRecurringDialog({
   onSuccess,
   open,
   onOpenChange,
+  showTrigger = true,
 }: SavingsRecurringDialogProps) {
   const {
     savingsRecurringForm,
@@ -38,12 +40,14 @@ export function SavingsRecurringDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Repeat className="h-4 w-4 mr-2" />
-          Recurring Savings
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Repeat className="h-4 w-4 mr-2" />
+            Recurring Savings
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Recurring Contribution</DialogTitle>

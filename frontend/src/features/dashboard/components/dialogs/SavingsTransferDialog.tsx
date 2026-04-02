@@ -16,12 +16,14 @@ interface SavingsTransferDialogProps {
   onSuccess: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 export function SavingsTransferDialog({
   onSuccess,
   open,
   onOpenChange,
+  showTrigger = true,
 }: SavingsTransferDialogProps) {
   const {
     savingsTransferForm,
@@ -31,12 +33,14 @@ export function SavingsTransferDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <ArrowRightLeft className="h-4 w-4 mr-2" />
-          Transfer to Checking
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <ArrowRightLeft className="h-4 w-4 mr-2" />
+            Transfer to Checking
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Transfer from Savings</DialogTitle>

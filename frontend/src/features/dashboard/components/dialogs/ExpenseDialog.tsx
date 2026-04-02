@@ -26,6 +26,7 @@ interface ExpenseDialogProps {
   onSuccess: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 export function ExpenseDialog({
@@ -34,6 +35,7 @@ export function ExpenseDialog({
   onSuccess,
   open,
   onOpenChange,
+  showTrigger = true,
 }: ExpenseDialogProps) {
   const { expenseForm, setExpenseForm, handleAddExpense } = useExpenseDialog(
     categories,
@@ -43,12 +45,14 @@ export function ExpenseDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Expense
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Expense
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add One-Time Expense</DialogTitle>

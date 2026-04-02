@@ -25,6 +25,7 @@ interface BillDialogProps {
   onSuccess: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 export function BillDialog({
@@ -32,6 +33,7 @@ export function BillDialog({
   onSuccess,
   open,
   onOpenChange,
+  showTrigger = true,
 }: BillDialogProps) {
   const { billForm, setBillForm, handleAddBill } = useBillDialog(
     categories,
@@ -41,12 +43,14 @@ export function BillDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Bill
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Bill
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Recurring Bill</DialogTitle>

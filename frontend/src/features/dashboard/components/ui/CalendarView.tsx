@@ -8,8 +8,6 @@ interface CalendarViewProps {
   monthsToShow: number;
   calendarDays: CalendarDay[];
   balanceAsOfDateStr: string;
-  onPreviousMonth: () => void;
-  onNextMonth: () => void;
   onDeleteBill: (id: number) => Promise<void>;
   onDeletePaycheck: (id: number) => Promise<void>;
   onDeleteExpense: (id: number) => Promise<void>;
@@ -21,8 +19,6 @@ export function CalendarView({
   monthsToShow,
   calendarDays,
   balanceAsOfDateStr,
-  onPreviousMonth,
-  onNextMonth,
   onDeleteBill,
   onDeletePaycheck,
   onDeleteExpense,
@@ -65,20 +61,6 @@ export function CalendarView({
                     year: "numeric",
                   })}
                 </CardTitle>
-                {monthOffset === 0 && (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={onPreviousMonth}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={onNextMonth}>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
               </div>
             </CardHeader>
             <CardContent>

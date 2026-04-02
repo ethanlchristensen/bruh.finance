@@ -1,28 +1,67 @@
-import { Button } from "@/components/ui/button";
 import { Upload, Download, Settings } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { type CalendarDay } from "@/lib/finance-api";
 import { useActionButtons } from "./hooks/action-buttons/useActionButtons";
 import { ExportCSVDialog } from "../dialogs/ExportCSVDialog";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
   onDataRefresh: () => Promise<void>;
   calendarDays: CalendarDay[];
   monthsToShow: number;
+  asMenuItems?: boolean;
 }
 
 export function ActionButtons({
   onDataRefresh,
   calendarDays,
   monthsToShow,
+  asMenuItems = false,
 }: ActionButtonsProps) {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { handleCSVImport, handleExportCSV } = useActionButtons(
     onDataRefresh,
     calendarDays,
     monthsToShow,
   );
+
+  if (asMenuItems) {
+    return (
+      <>
+        <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
+          <Upload className="h-4 w-4 mr-2" />
+          Import CSV
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setExportDialogOpen(true)}>
+          <Download className="h-4 w-4 mr-2" />
+          Export Report
+        </DropdownMenuItem>
+        <Link to="/settings">
+          <DropdownMenuItem>
+            <Settings className="h-4 w-4 mr-2" />
+            Update Balance
+          </DropdownMenuItem>
+        </Link>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          className="hidden"
+          onChange={handleCSVImport}
+        />
+
+        <ExportCSVDialog
+          open={exportDialogOpen}
+          onOpenChange={setExportDialogOpen}
+          onExport={handleExportCSV}
+        />
+      </>
+    );
+  }
 
   return (
     <>

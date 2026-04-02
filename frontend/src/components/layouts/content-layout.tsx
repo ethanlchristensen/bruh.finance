@@ -11,18 +11,18 @@ export const ContentLayout = ({
   fullHeight = false,
 }: ContentLayoutProps) => {
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <header className="bg-sidebar flex shrink-0 items-center justify-end gap-1 px-4 py-1">
+    <div className="flex flex-col h-screen overflow-hidden pb-2 pr-2 bg-card">
+      <header className="bg-card flex shrink-0 items-center justify-end gap-1 px-4 py-1">
         <div className="flex items-center gap-2">
           <ThemeToggle />
         </div>
       </header>
       {fullHeight ? (
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col bg-background rounded-xl border shadow-sm">
           {children}
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto py-6">
+        <div className="flex-1 min-h-0 overflow-auto bg-background rounded-xl border shadow-sm">
           <div className="mx-auto max-w-10xl px-4 py-6 sm:px-6 md:px-8">
             {children}
           </div>

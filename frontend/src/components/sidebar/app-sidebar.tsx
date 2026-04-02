@@ -60,7 +60,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* This is the first sidebar */}
       <Sidebar
         collapsible="none"
-        className="w-[calc(var(--sidebar-width-icon)+1px)]! border-r overflow-hidden *:data-[sidebar=sidebar]:flex-row h-screen"
+        className="w-[calc(var(--sidebar-width-icon)+1px)]! border-none overflow-hidden *:data-[sidebar=sidebar]:flex-row h-screen"
       >
         <SidebarContent>
           <SidebarGroup>

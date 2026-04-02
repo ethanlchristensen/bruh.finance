@@ -16,24 +16,28 @@ interface SavingsDepositDialogProps {
   onSuccess: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 export function SavingsDepositDialog({
   onSuccess,
   open,
   onOpenChange,
+  showTrigger = true,
 }: SavingsDepositDialogProps) {
   const { savingsDepositForm, setSavingsDepositForm, handleAddSavingsDeposit } =
     useSavingsDepositDialog(onSuccess, onOpenChange);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <PiggyBank className="h-4 w-4 mr-2" />
-          Savings Deposit
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <PiggyBank className="h-4 w-4 mr-2" />
+            Savings Deposit
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Savings Deposit</DialogTitle>

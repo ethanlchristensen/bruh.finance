@@ -23,24 +23,28 @@ interface PaycheckDialogProps {
   onSuccess: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 export function PaycheckDialog({
   onSuccess,
   open,
   onOpenChange,
+  showTrigger = true,
 }: PaycheckDialogProps) {
   const { paycheckForm, setPaycheckForm, handleAddPaycheck } =
     usePaycheckDialog(onSuccess, onOpenChange);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Paycheck
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Paycheck
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Paycheck</DialogTitle>

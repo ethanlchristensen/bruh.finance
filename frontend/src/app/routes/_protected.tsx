@@ -31,7 +31,8 @@ function ProtectedLayout() {
     (match) =>
       match.pathname === "/" ||
       match.pathname.startsWith("/chat/") ||
-      match.pathname.startsWith("/bills"),
+      match.pathname.startsWith("/bills") ||
+      match.pathname.startsWith("/dashboard"),
   );
 
   useEffect(() => {
