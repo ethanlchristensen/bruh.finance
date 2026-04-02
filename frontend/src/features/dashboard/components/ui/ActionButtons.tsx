@@ -35,7 +35,10 @@ export function ActionButtons({
           <Upload className="h-4 w-4 mr-2" />
           Import CSV
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setExportDialogOpen(true)}>
+        <DropdownMenuItem onSelect={(e) => {
+          e.preventDefault();
+          setExportDialogOpen(true);
+        }}>
           <Download className="h-4 w-4 mr-2" />
           Export Report
         </DropdownMenuItem>
