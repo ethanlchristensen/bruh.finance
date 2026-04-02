@@ -44,7 +44,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 
 export default function DashboardPage() {
   const {
@@ -88,7 +87,7 @@ export default function DashboardPage() {
           currentDate={currentDate}
           allCalendarDays={allCalendarDays}
         />
-        
+
         <div className="flex justify-between items-center bg-card rounded-lg border p-2 px-4 shrink-0">
           <div className="flex items-center gap-2">
             <Select
