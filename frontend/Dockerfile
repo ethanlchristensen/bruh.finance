@@ -15,7 +15,7 @@ ENV VITE_APP_BACKEND_API_VERSION=$VITE_APP_BACKEND_API_VERSION
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
