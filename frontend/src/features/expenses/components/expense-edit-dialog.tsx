@@ -36,6 +36,17 @@ export function ExpenseEditDialog({
   onSave,
 }: ExpenseEditDialogProps) {
   const [formData, setFormData] = useState<Partial<Expense>>({});
+  const [lastExpenseId, setLastExpenseId] = useState<number | undefined>();
+
+  if (expense && expense.id !== lastExpenseId) {
+    setLastExpenseId(expense.id);
+    setFormData({
+      ...expense,
+      category_id: expense.category?.id || expense.category_id || undefined,
+      relatedBillId: expense.relatedBillId || undefined,
+    });
+  }
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([]);
   const {
@@ -60,18 +71,6 @@ export function ExpenseEditDialog({
     }
     loadData();
   }, []);
-
-  useEffect(() => {
-    if (expense) {
-      setFormData({
-        ...expense,
-        category_id: expense.category?.id || expense.category_id || undefined,
-        relatedBillId: expense.relatedBillId || undefined,
-      });
-    } else {
-      setFormData({});
-    }
-  }, [expense]);
 
   useEffect(() => {
     if (isSuccess) {

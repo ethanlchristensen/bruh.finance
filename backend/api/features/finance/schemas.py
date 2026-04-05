@@ -133,6 +133,25 @@ class FinanceDataSchema(Schema):
     )
     savingsTransactions: List[SavingsTransactionSchema] = Field(alias="savings_transactions")
 
+    class Config:
+        populate_by_name = True
+
+
+class ExportDataSchema(Schema):
+    categories: List[CategorySchema]
+    account: FinanceAccountSchema
+    savingsAccount: SavingsAccountSchema = Field(alias="savings_account")
+    recurringBills: List[RecurringBillSchema] = Field(alias="recurring_bills")
+    paychecks: List[PaycheckSchema] = Field(alias="paychecks")
+    expenses: List[ExpenseSchema] = Field(alias="expenses")
+    savingsRecurringDeposits: List[SavingsRecurringDepositSchema] = Field(
+        alias="savings_recurring_deposits"
+    )
+    savingsTransactions: List[SavingsTransactionSchema] = Field(alias="savings_transactions")
+
+    class Config:
+        populate_by_name = True
+
 
 class CalendarDataRequestSchema(Schema):
     startDate: Optional[date] = None

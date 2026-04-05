@@ -90,6 +90,10 @@ export interface FinanceData {
   savingsTransactions: SavingsTransaction[];
 }
 
+export interface ExportData extends FinanceData {
+  categories: Category[];
+}
+
 export interface CalendarBill {
   id: number;
   name: string;
@@ -486,5 +490,19 @@ export async function exportCSV(
     { responseType: "blob" },
   );
 
+  return response;
+}
+
+// Data Management
+export async function exportData() {
+  const response = await api.get<ExportData>("/finance/export");
+  return response;
+}
+
+export async function importData(data: ExportData) {
+  const response = await api.post<{ success: boolean; message: string }>(
+    "/finance/import",
+    data,
+  );
   return response;
 }
