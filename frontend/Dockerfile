@@ -13,7 +13,11 @@ ENV VITE_APP_BACKEND_API_VERSION=$VITE_APP_BACKEND_API_VERSION
 # Copy package files
 COPY package*.json ./
 
-RUN npm install
+# The "Universal Fix":
+# 1. We delete the lockfile inside the container so npm doesn't use the Windows settings
+# 2. We install fresh for the container's architecture
+RUN rm -f package-lock.json && \
+    npm install --platform=linux --arch=arm64
 
 # Copy source code
 COPY . .
