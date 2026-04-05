@@ -29,7 +29,7 @@ ENV DJANGO_SETTINGS_MODULE=config.settings \
     STATIC_ROOT=/app/static \
     SECRET_KEY=temp-secret-key-for-build
 
-RUN echo '{}' > /app/config.json
+RUN echo '{"allowed_hosts": ["localhost"], "media_root": "./media"}' > /app/config.json
 
 RUN mkdir -p /app/static && \
     python manage.py collectstatic --noinput
