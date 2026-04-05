@@ -46,7 +46,7 @@ jobs:
       - name: Build and push (Frontend)
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend'
+          context: ./frontend
           build-args: |
             VITE_APP_BACKEND_API_URL=""
             VITE_APP_BACKEND_API_VERSION="api"
