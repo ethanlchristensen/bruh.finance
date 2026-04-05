@@ -1,34 +1,89 @@
-name: Deploy to Raspberry Pi
-
+name: Deploy Finance App to Raspberry Pi
 on:
-  pull_request:
-    branches: [main, master]
   push:
     branches: [main, master]
   workflow_dispatch:
 
+concurrency:
+  group: finance-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  # This makes the image names: ghcr.io/your-username/bruh.finance-backend
+  IMAGE_BACKEND: ${{ github.repository }}-backend
+  IMAGE_FRONTEND: ${{ github.repository }}-frontend
+
 jobs:
-  deploy:
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+  build-and-push:
     runs-on: [self-hosted, linux, arm64, RPI5]
-    environment: production
-    
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Copy configuration files
-        run: |
-          echo "Copying environment files..."
-          cp /home/ethan/source/repos/bruh.finance/.env.container ./.env
-          cp /home/ethan/source/repos/bruh.finance/backend/config.json ./backend/config.json
-          cp /home/ethan/source/repos/bruh.finance/frontend/.env ./frontend/.env
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy with Docker Compose
+      # 1. Build Backend
+      - name: Build and push (Backend)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }}
+
+      # 2. Build Frontend
+      - name: Build and push (Frontend)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    steps:
+      - name: Checkout Helm Charts (kubeinfra)
+        uses: actions/checkout@v4
+        with:
+          repository: ethanlchristensen/bruh.kubeinfra
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+
+      - name: Configure kubeconfig
         run: |
-          echo "Stopping existing prod services (if any)..."
-          docker compose down --remove-orphans
-          echo "Building and starting prod services..."
-          docker compose up -d --build 
-          echo "Cleaning up old Docker images..."
-          docker image prune -af
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Deploy Backend
+        run: |
+          helm upgrade --install bruhfinance-backend app-chart \
+            -f app-values/values-finance-backend.yaml \
+            --set image=${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }} \
+            -n my-apps
+
+      - name: Deploy Frontend
+        run: |
+          helm upgrade --install bruhfinance-frontend app-chart \
+            -f app-values/values-finance-frontend.yaml \
+            --set image=${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }} \
+            -n my-apps
