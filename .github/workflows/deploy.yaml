@@ -48,8 +48,8 @@ jobs:
         with:
           context: ./frontend
           build-args: |
-            VITE_APP_BACKEND_API_URL=""
-            VITE_APP_BACKEND_API_VERSION="api"
+            VITE_APP_BACKEND_API_URL=
+            VITE_APP_BACKEND_API_VERSION=api
           platforms: linux/arm64
           push: true
           tags: |
