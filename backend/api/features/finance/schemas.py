@@ -1,17 +1,15 @@
 from datetime import date, datetime
-from decimal import Decimal
 from typing import List, Optional
 
 from ninja import Schema
-from pydantic import Field, condecimal
+from pydantic import Field
 
-# Use a reusable type for money: max 10 digits, 2 decimal places
-Money = condecimal(max_digits=10, decimal_places=2)
 
 class FinanceAccountSchema(Schema):
-    startingBalance: Money = Field(alias="starting_balance")
-    currentBalance: Money = Field(alias="current_balance")
+    startingBalance: float = Field(alias="starting_balance")
+    currentBalance: float = Field(alias="current_balance")
     balanceAsOfDate: date = Field(alias="balance_as_of_date")
+
 
     createdAt: Optional[datetime] = Field(default=None, alias="created_at")
     isDeleted: bool = Field(default=False, alias="is_deleted")
@@ -22,9 +20,10 @@ class FinanceAccountSchema(Schema):
 
 
 class SavingsAccountSchema(Schema):
-    startingBalance: Money = Field(alias="starting_balance")
-    currentBalance: Money = Field(alias="current_balance")
+    startingBalance: float = Field(alias="starting_balance")
+    currentBalance: float = Field(alias="current_balance")
     balanceAsOfDate: date = Field(alias="balance_as_of_date")
+
 
     createdAt: Optional[datetime] = Field(default=None, alias="created_at")
     isDeleted: bool = Field(default=False, alias="is_deleted")
@@ -37,8 +36,9 @@ class SavingsAccountSchema(Schema):
 class SavingsRecurringDepositSchema(Schema):
     id: Optional[int] = None
     name: str
-    amount: Money
+    amount: float
     frequency: str
+
 
     startDate: date = Field(alias="start_date")
     dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
@@ -55,8 +55,9 @@ class SavingsRecurringDepositSchema(Schema):
 class SavingsTransactionSchema(Schema):
     id: Optional[int] = None
     transactionType: str = Field(alias="transaction_type")
-    amount: Money
+    amount: float
     date: date
+
 
     notes: Optional[str] = None
     isDeleted: bool = Field(default=False, alias="is_deleted")
@@ -81,15 +82,16 @@ class CategorySchema(Schema):
 class RecurringBillSchema(Schema):
     id: Optional[int] = None
     name: str
-    amount: Money
+    amount: float
     frequency: str = "monthly"
     startDate: date = Field(alias="start_date")
     dueDay: Optional[int] = Field(default=None, alias="due_day")
     dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
     category: Optional[CategorySchema] = None
     category_id: Optional[int] = None
-    total: Optional[Money] = None
-    amountPaid: Optional[Money] = Field(default=None, alias="amount_paid")
+    total: Optional[float] = None
+    amountPaid: Optional[float] = Field(default=None, alias="amount_paid")
+
 
     isDeleted: bool = Field(default=False, alias="is_deleted")
     deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
@@ -100,8 +102,9 @@ class RecurringBillSchema(Schema):
 
 class PaycheckSchema(Schema):
     id: Optional[int] = None
-    amount: Money
+    amount: float
     date: date
+
 
     frequency: str
     dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
@@ -119,8 +122,9 @@ class PaycheckSchema(Schema):
 class ExpenseSchema(Schema):
     id: Optional[int] = None
     name: str
-    amount: Money
+    amount: float
     date: date
+
 
     category: Optional[CategorySchema] = None
     category_id: Optional[int] = None
