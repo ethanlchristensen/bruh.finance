@@ -81,13 +81,15 @@ jobs:
       - name: Deploy Backend
         run: |
           helm upgrade --install bruhfinance-backend app-chart \
-            -f app-values/values-finance-backend.yaml \
-            --set image=${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }} \
-            -n my-apps
-
+          -f app-values/values-finance-backend.yaml \
+          --set image=${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }} \
+          -n finance \
+          --create-namespace
+          
       - name: Deploy Frontend
         run: |
           helm upgrade --install bruhfinance-frontend app-chart \
-            -f app-values/values-finance-frontend.yaml \
-            --set image=${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }} \
-            -n my-apps
+          -f app-values/values-finance-frontend.yaml \
+          --set image=${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }} \
+          -n finance \
+          --create-namespace
