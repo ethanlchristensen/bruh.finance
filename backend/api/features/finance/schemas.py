@@ -10,7 +10,6 @@ class FinanceAccountSchema(Schema):
     currentBalance: float = Field(alias="current_balance")
     balanceAsOfDate: date = Field(alias="balance_as_of_date")
 
-
     createdAt: Optional[datetime] = Field(default=None, alias="created_at")
     isDeleted: bool = Field(default=False, alias="is_deleted")
     deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
@@ -23,7 +22,6 @@ class SavingsAccountSchema(Schema):
     startingBalance: float = Field(alias="starting_balance")
     currentBalance: float = Field(alias="current_balance")
     balanceAsOfDate: date = Field(alias="balance_as_of_date")
-
 
     createdAt: Optional[datetime] = Field(default=None, alias="created_at")
     isDeleted: bool = Field(default=False, alias="is_deleted")
@@ -38,7 +36,6 @@ class SavingsRecurringDepositSchema(Schema):
     name: str
     amount: float
     frequency: str
-
 
     startDate: date = Field(alias="start_date")
     dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
@@ -57,7 +54,6 @@ class SavingsTransactionSchema(Schema):
     transactionType: str = Field(alias="transaction_type")
     amount: float
     date: date
-
 
     notes: Optional[str] = None
     isDeleted: bool = Field(default=False, alias="is_deleted")
@@ -92,7 +88,6 @@ class RecurringBillSchema(Schema):
     total: Optional[float] = None
     amountPaid: Optional[float] = Field(default=None, alias="amount_paid")
 
-
     isDeleted: bool = Field(default=False, alias="is_deleted")
     deletedAt: Optional[datetime] = Field(default=None, alias="deleted_at")
 
@@ -104,7 +99,6 @@ class PaycheckSchema(Schema):
     id: Optional[int] = None
     amount: float
     date: date
-
 
     frequency: str
     dayOfWeek: Optional[int] = Field(default=None, alias="day_of_week")
@@ -124,7 +118,6 @@ class ExpenseSchema(Schema):
     name: str
     amount: float
     date: date
-
 
     category: Optional[CategorySchema] = None
     category_id: Optional[int] = None
