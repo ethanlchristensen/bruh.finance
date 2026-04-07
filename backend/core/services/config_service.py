@@ -9,6 +9,8 @@ from pydantic import BaseModel
 class Config(BaseModel):
     allowed_hosts: List[str]
     media_root: str
+    secret_key: Optional[str] = None
+    debug: bool = False
 
 
 class ConfigService:

@@ -3,5 +3,7 @@
         "localhost",
         "127.0.0.1"
     ],
-    "media_root": "media"
+    "media_root": "media",
+    "secret_key": "YOUR-SUPER-SECRET-LONG-RANDOM-STRING-HERE",
+    "debug": false
 }

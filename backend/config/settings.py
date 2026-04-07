@@ -31,10 +31,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-v@+7%s*ztha89*%n7*%arm9h&eqa0o9g+x)5ae=#29@5=5iy*0"
+# 1. Try to get it from the environment variable (used by docker-compose)
+# 2. Try to get it from the secure config.json (used by kubernetes)
+# 3. Fallback to the hardcoded leaked key ONLY if we are in local development (DEBUG=True)
+_env_key = os.environ.get("SECRET_KEY")
+_config_key = CONFIG.secret_key if CONFIG and hasattr(CONFIG, "secret_key") else None
+_fallback_key = "django-insecure-v@+7%s*ztha89*%n7*%arm9h&eqa0o9g+x)5ae=#29@5=5iy*0"
+
+SECRET_KEY = _env_key or _config_key or _fallback_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = CONFIG.debug if CONFIG and hasattr(CONFIG, "debug") else False
+
+if not DEBUG and SECRET_KEY == _fallback_key:
+    raise ValueError("You must set a secure SECRET_KEY in production (via env or config.json).")
 
 ALLOWED_HOSTS = CONFIG.allowed_hosts if CONFIG else []
 
