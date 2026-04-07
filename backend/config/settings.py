@@ -38,6 +38,22 @@ DEBUG = CONFIG.debug if CONFIG and hasattr(CONFIG, "debug") else False
 
 ALLOWED_HOSTS = CONFIG.allowed_hosts if CONFIG else []
 
+# CSRF settings for production and proxy environments
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:5173",
+]
+# If you have a specific production domain, add it here or via CONFIG
+if CONFIG and hasattr(CONFIG, "allowed_hosts"):
+    for host in CONFIG.allowed_hosts:
+        if host != "*":
+            CSRF_TRUSTED_ORIGINS.append(f"http://{host}")
+            CSRF_TRUSTED_ORIGINS.append(f"https://{host}")
+
+# Ensure Django knows it's behind a proxy that handles HTTPS
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Application definition
 
 INSTALLED_APPS = [
