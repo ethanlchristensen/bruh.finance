@@ -176,27 +176,39 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
-        "file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "debug.log"),
-            "formatter": "verbose",
-        },
     },
     "root": {
-        "handlers": ["console", "file"],
+        "handlers": ["console"],
         "level": "INFO",
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
         "api": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,
         },
     },
 }
+
+# Optional: Add file logging if specifically configured or in local development
+LOG_FILE_PATH = os.path.join(BASE_DIR, "debug.log")
+try:
+    # Try to open/create the log file to check permissions
+    with open(LOG_FILE_PATH, "a"):
+        LOGGING["handlers"]["file"] = {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": LOG_FILE_PATH,
+            "formatter": "verbose",
+        }
+        LOGGING["root"]["handlers"].append("file")
+        LOGGING["loggers"]["django"]["handlers"].append("file")
+        LOGGING["loggers"]["api"]["handlers"].append("file")
+except (PermissionError, IOError):
+    # Fallback to console-only logging in restricted environments (like some containers)
+    pass
