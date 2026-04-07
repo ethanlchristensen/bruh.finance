@@ -59,6 +59,7 @@ export function PaycheckDialog({
               id="paycheckAmount"
               type="number"
               step="0.01"
+              max="9999999999.99"
               placeholder="2000.00"
               value={paycheckForm.amount}
               onChange={(e) =>

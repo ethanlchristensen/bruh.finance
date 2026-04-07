@@ -23,8 +23,8 @@ class SoftDeleteModel(models.Model):
 
 class FinanceAccount(SoftDeleteModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="finance_account")
-    starting_balance = models.DecimalField(max_digits=10, decimal_places=2)
-    current_balance = models.DecimalField(max_digits=10, decimal_places=2)
+    starting_balance = models.DecimalField(max_digits=14, decimal_places=2)
+    current_balance = models.DecimalField(max_digits=14, decimal_places=2)
     balance_as_of_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -34,8 +34,8 @@ class FinanceAccount(SoftDeleteModel):
 
 class SavingsAccount(SoftDeleteModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="savings_account")
-    starting_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    starting_balance = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    current_balance = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     balance_as_of_date = models.DateField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -63,7 +63,7 @@ class SavingsRecurringDeposit(SoftDeleteModel):
         related_name="recurring_deposits",
     )
     name = models.CharField(max_length=255)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
     frequency = models.CharField(
         max_length=20, choices=SAVINGS_FREQUENCY_CHOICES, default="monthly"
     )
@@ -95,7 +95,7 @@ class SavingsTransaction(SoftDeleteModel):
         related_name="transactions",
     )
     transaction_type = models.CharField(max_length=32, choices=SAVINGS_TRANSACTION_TYPE_CHOICES)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
     date = models.DateField(default=timezone.now)
     notes = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -168,7 +168,7 @@ class RecurringBill(SoftDeleteModel):
         blank=True,
     )
     name = models.CharField(max_length=255)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
     frequency = models.CharField(
         max_length=20,
         choices=FREQUENCY_CHOICES,
@@ -194,8 +194,8 @@ class RecurringBill(SoftDeleteModel):
         limit_choices_to={"type__in": ["bill", "expense", "general"]},
         help_text="The category this recurring bill belongs to.",
     )
-    total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    total = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    amount_paid = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s {self.name}"
@@ -206,7 +206,7 @@ class Paycheck(SoftDeleteModel):
     finance_account = models.ForeignKey(
         FinanceAccount, on_delete=models.CASCADE, related_name="paychecks", null=True, blank=True
     )
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
     date = models.DateField()
     frequency = models.CharField(max_length=255)
     day_of_week = models.IntegerField(null=True, blank=True)
@@ -232,7 +232,7 @@ class Expense(SoftDeleteModel):
         FinanceAccount, on_delete=models.CASCADE, related_name="expenses", null=True, blank=True
     )
     name = models.CharField(max_length=255)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
     date = models.DateField()
     category = models.ForeignKey(
         Category,

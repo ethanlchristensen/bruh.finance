@@ -11,19 +11,23 @@ class LoggingMiddleware:
     def __call__(self, request):
         start_time = time.time()
 
-        user = getattr(request, "user", "Anonymous")
+        initial_user = getattr(request, "user", "Anonymous")
         method = request.method
         path = request.get_full_path()
 
-        logger.info(f"Incoming request: {method} {path} - User: {user}")
+        logger.info(f"Incoming request: {method} {path} - User: {initial_user}")
 
         response = self.get_response(request)
 
         duration = time.time() - start_time
         status_code = response.status_code
 
+        # Ninja populates request.user during the request lifecycle,
+        # so we check it again to log the authenticated user.
+        resolved_user = getattr(request, "user", "Anonymous")
+
         logger.info(
-            f"Outgoing response: {method} {path} - Status: {status_code} - Duration: {duration:.2f}s"
+            f"Outgoing response: {method} {path} - Status: {status_code} - Duration: {duration:.2f}s - User: {resolved_user}"
         )
 
         return response
