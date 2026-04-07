@@ -27,11 +27,14 @@ api = NinjaExtraAPI()
 @api.exception_handler(ValidationError)
 def validation_errors(request, exc):
     logger.error(f"Validation Error at {request.path}: {exc}")
+    # We exclude the raw input from the error details to avoid serialization issues
+    # with complex Django objects like DjangoGetter/QuerySets that can be attached by Ninja
+    error_details = exc.errors(include_url=False, include_context=False, include_input=False)
     return api.create_response(
         request,
         {
             "message": "Data validation error. Please check your inputs for invalid values.",
-            "details": exc.errors(),
+            "details": error_details,
         },
         status=422,
     )

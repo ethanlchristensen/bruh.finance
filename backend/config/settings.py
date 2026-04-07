@@ -10,10 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import decimal
 import os
 from pathlib import Path
 
 from core.services import config_service
+
+# Set global decimal precision to handle large financial calculations and long-term projections
+# without triggering InvalidOperation (which can happen at the default 28 precision
+# when running balances accumulate over several years)
+decimal.getcontext().prec = 50
 
 CONFIG = config_service.get_config()
 
