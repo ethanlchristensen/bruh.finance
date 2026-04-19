@@ -1,4 +1,4 @@
-name: Deploy Finance App to Raspberry Pi
+name: Deploy Pironman 5 Max K3S
 on:
   push:
     branches: [main, master]

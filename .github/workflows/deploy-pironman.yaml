@@ -1,4 +1,4 @@
-name: Deploy (Docker Compose)
+name: Deploy Pironman 5 Local
 on:
   pull_request:
     branches: [main, master]
