@@ -36,7 +36,7 @@ class ExpenseController:
     @route.post("", response={201: ExpenseSchema, 400: dict})
     def create_expense(self, request, data: ExpenseSchema):
         """Create a new expense"""
-        logger.info(f"User {request.user} creating expense: {data.description}")
+        logger.info(f"User {request.user} creating expense: {data.name}")
         try:
             finance_account = FinanceAccount.objects.get(user=request.user)
             payload = data.dict(exclude_unset=True, by_alias=True, exclude={"id", "category"})
