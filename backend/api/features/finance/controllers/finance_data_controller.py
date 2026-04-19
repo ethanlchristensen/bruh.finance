@@ -17,6 +17,8 @@ from api.features.finance.utils import get_or_create_finance_account, get_or_cre
 from api.features.users.permissons import IsApproved
 
 
+from datetime import timedelta
+from django.utils import timezone
 from api.features.finance.services.finance_dashboard_service import FinanceDashboardService
 
 
@@ -28,7 +30,40 @@ class FinanceDataController:
     @route.get("", response=FinanceDataSchema)
     def get_all_finance_data(self, request):
         """Get all finance data for current user"""
-        return self.dashboard_service.get_complete_finance_data(request.user)
+        user = request.user
+        account = get_or_create_finance_account(user=user)
+        savings_account = get_or_create_savings_account(user=user)
+        recurring_bills = RecurringBill.objects.filter(user=user, is_deleted=False)
+        paychecks = Paycheck.objects.filter(user=user, is_deleted=False)
+        expenses = Expense.objects.filter(user=user, is_deleted=False)
+        recurring_savings = SavingsRecurringDeposit.objects.filter(
+            user=user, is_deleted=False
+        )
+        savings_transactions = SavingsTransaction.objects.filter(
+            user=user, is_deleted=False
+        )
+
+        today = timezone.now().date()
+        month_start = today.replace(day=1)
+        if today.month == 12:
+            month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+
+        unaccounted_spending = self.dashboard_service._calculate_unaccounted_spending(
+            user, month_start, month_end
+        )
+
+        return {
+            "account": account,
+            "recurringBills": recurring_bills,
+            "paychecks": paychecks,
+            "expenses": expenses,
+            "unaccounted_spending": unaccounted_spending,
+            "savings_account": savings_account,
+            "savings_recurring_deposits": recurring_savings,
+            "savings_transactions": savings_transactions,
+        }
 
     @route.get("/export", response=ExportDataSchema)
     def export_finance_data(self, request):

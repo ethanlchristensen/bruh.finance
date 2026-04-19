@@ -86,6 +86,7 @@ class FinanceDashboardService:
                     "id": bill.id,
                     "name": bill.name,
                     "amount": bill.amount,
+                    "frequency": bill.frequency,
                     "dueDay": bill.due_day,
                     "category": bill.category,
                     "total": bill.total,
