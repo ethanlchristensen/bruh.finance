@@ -15,8 +15,12 @@ export function SummaryCards({
   currentDate,
   allCalendarDays,
 }: SummaryCardsProps) {
-  const { currentBalanceDisplay, currentMonthEndDay, projectedSavingsBalance } =
-    useSummaryCards(financeData, calendarDays, currentDate, allCalendarDays);
+  const {
+    currentBalanceDisplay,
+    currentMonthEndDay,
+    projectedSavingsBalance,
+    currentSavingsBalanceDisplay,
+  } = useSummaryCards(financeData, calendarDays, currentDate, allCalendarDays);
 
   return (
     <Card className="w-full shrink-0 px-2 py-4 bg-transparent border-none">
@@ -43,14 +47,6 @@ export function SummaryCards({
 
           <div className="flex flex-col">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-              Starting Balance
-            </span>
-            <span className="text-3xl font-bold">
-              ${financeData.account.startingBalance.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               Unaccounted Spending
             </span>
             <span className="text-3xl font-bold text-destructive">
@@ -66,16 +62,11 @@ export function SummaryCards({
               Savings Balance
             </span>
             <span className="text-3xl font-bold">
-              ${financeData.savingsAccount.currentBalance.toFixed(2)}
+              ${currentSavingsBalanceDisplay.toFixed(2)}
             </span>
             <div className="flex gap-2 mt-1">
-              <span className="text-xs text-muted-foreground">
-                Started: $
-                {financeData.savingsAccount.startingBalance.toFixed(2)}
-              </span>
-              <span className="text-xs text-muted-foreground">·</span>
               <span
-                className={`text-xs ${projectedSavingsBalance >= financeData.savingsAccount.currentBalance ? "text-primary" : "text-destructive"}`}
+                className={`text-xs ${projectedSavingsBalance >= currentSavingsBalanceDisplay ? "text-primary" : "text-destructive"}`}
               >
                 Projected: ${projectedSavingsBalance.toFixed(2)}
               </span>

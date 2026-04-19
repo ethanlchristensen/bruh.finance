@@ -36,9 +36,14 @@ export function useSummaryCards(
     ? todayData.runningBalance
     : financeData.account.currentBalance;
 
+  const currentSavingsBalanceDisplay = todayData
+    ? todayData.savingsRunningBalance
+    : financeData.savingsAccount.currentBalance;
+
   return {
     currentBalanceDisplay,
     currentMonthEndDay,
     projectedSavingsBalance,
+    currentSavingsBalanceDisplay,
   };
 }
