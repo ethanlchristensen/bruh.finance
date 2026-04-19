@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.db import transaction
+from django.utils import timezone
 from ninja_extra import api_controller, route
 from ninja_jwt.authentication import JWTAuth
 
@@ -13,13 +16,9 @@ from api.features.finance.models import (
     SavingsTransaction,
 )
 from api.features.finance.schemas import ExportDataSchema, FinanceDataSchema
+from api.features.finance.services.finance_dashboard_service import FinanceDashboardService
 from api.features.finance.utils import get_or_create_finance_account, get_or_create_savings_account
 from api.features.users.permissons import IsApproved
-
-
-from datetime import timedelta
-from django.utils import timezone
-from api.features.finance.services.finance_dashboard_service import FinanceDashboardService
 
 
 @api_controller("/finance", auth=JWTAuth(), tags=["Finance Data"], permissions=[IsApproved])
@@ -36,12 +35,8 @@ class FinanceDataController:
         recurring_bills = RecurringBill.objects.filter(user=user, is_deleted=False)
         paychecks = Paycheck.objects.filter(user=user, is_deleted=False)
         expenses = Expense.objects.filter(user=user, is_deleted=False)
-        recurring_savings = SavingsRecurringDeposit.objects.filter(
-            user=user, is_deleted=False
-        )
-        savings_transactions = SavingsTransaction.objects.filter(
-            user=user, is_deleted=False
-        )
+        recurring_savings = SavingsRecurringDeposit.objects.filter(user=user, is_deleted=False)
+        savings_transactions = SavingsTransaction.objects.filter(user=user, is_deleted=False)
 
         today = timezone.now().date()
         month_start = today.replace(day=1)
