@@ -17,32 +17,18 @@ from api.features.finance.utils import get_or_create_finance_account, get_or_cre
 from api.features.users.permissons import IsApproved
 
 
+from api.features.finance.services.finance_dashboard_service import FinanceDashboardService
+
+
 @api_controller("/finance", auth=JWTAuth(), tags=["Finance Data"], permissions=[IsApproved])
 class FinanceDataController:
+    def __init__(self):
+        self.dashboard_service = FinanceDashboardService()
+
     @route.get("", response=FinanceDataSchema)
     def get_all_finance_data(self, request):
         """Get all finance data for current user"""
-        account = get_or_create_finance_account(user=request.user)
-        savings_account = get_or_create_savings_account(user=request.user)
-        recurring_bills = RecurringBill.objects.filter(user=request.user, is_deleted=False)
-        paychecks = Paycheck.objects.filter(user=request.user, is_deleted=False)
-        expenses = Expense.objects.filter(user=request.user, is_deleted=False)
-        recurring_savings = SavingsRecurringDeposit.objects.filter(
-            user=request.user, is_deleted=False
-        )
-        savings_transactions = SavingsTransaction.objects.filter(
-            user=request.user, is_deleted=False
-        )
-
-        return {
-            "account": account,
-            "recurringBills": recurring_bills,
-            "paychecks": paychecks,
-            "expenses": expenses,
-            "savings_account": savings_account,
-            "savings_recurring_deposits": recurring_savings,
-            "savings_transactions": savings_transactions,
-        }
+        return self.dashboard_service.get_complete_finance_data(request.user)
 
     @route.get("/export", response=ExportDataSchema)
     def export_finance_data(self, request):

@@ -85,6 +85,7 @@ export interface FinanceData {
   recurringBills: RecurringBill[];
   paychecks: Paycheck[];
   expenses: Expense[];
+  unaccountedSpending: number;
   savingsAccount: SavingsAccount;
   savingsRecurringDeposits: SavingsRecurringDeposit[];
   savingsTransactions: SavingsTransaction[];

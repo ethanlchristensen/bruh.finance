@@ -36,6 +36,17 @@ class FinanceDashboardService:
         expenses = Expense.objects.filter(user=user, is_deleted=False).order_by("date")
         paychecks = Paycheck.objects.filter(user=user, is_deleted=False).order_by("date")
         bills = RecurringBill.objects.filter(user=user, is_deleted=False).order_by("due_day")
+
+        # Calculate unaccounted spending for current month
+        today = timezone.now().date()
+        month_start = today.replace(day=1)
+        if today.month == 12:
+            month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+
+        unaccounted_spending = self._calculate_unaccounted_spending(user, month_start, month_end)
+
         recurring_savings = SavingsRecurringDeposit.objects.filter(
             user=user, is_deleted=False
         ).order_by("created_at")
@@ -56,9 +67,11 @@ class FinanceDashboardService:
                     "amount": exp.amount,
                     "date": exp.date.isoformat(),
                     "category": exp.category,
+                    "related_bill_id": exp.related_bill_id,
                 }
                 for exp in expenses
             ],
+            "unaccounted_spending": unaccounted_spending,
             "paychecks": [
                 {
                     "id": pc.id,
@@ -182,5 +195,18 @@ class FinanceDashboardService:
         """Calculate total expenses for a date range"""
         expenses = Expense.objects.filter(
             user=user, date__gte=start_date, date__lte=end_date, is_deleted=False
+        )
+        return sum(exp.amount for exp in expenses) or Decimal("0.00")
+
+    def _calculate_unaccounted_spending(
+        self, user: User, start_date: date, end_date: date
+    ) -> Decimal:
+        """Calculate expenses not tied to a bill payoff for a date range"""
+        expenses = Expense.objects.filter(
+            user=user,
+            date__gte=start_date,
+            date__lte=end_date,
+            is_deleted=False,
+            related_bill__isnull=True,
         )
         return sum(exp.amount for exp in expenses) or Decimal("0.00")

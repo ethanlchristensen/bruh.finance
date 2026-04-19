@@ -134,6 +134,7 @@ class FinanceDataSchema(Schema):
     recurringBills: List[RecurringBillSchema]
     paychecks: List[PaycheckSchema]
     expenses: List[ExpenseSchema]
+    unaccountedSpending: float = Field(default=0.0, alias="unaccounted_spending")
     savingsAccount: SavingsAccountSchema = Field(alias="savings_account")
     savingsRecurringDeposits: List[SavingsRecurringDepositSchema] = Field(
         alias="savings_recurring_deposits"
@@ -259,6 +260,7 @@ class FinanceDashboardDataSchema(Schema):
     expenses: List[CalendarExpenseSchema]
     paychecks: List[CalendarPaycheckSchema]
     recurringBills: List[CalendarBillSchema]
+    unaccountedSpending: float = Field(default=0.0, alias="unaccounted_spending")
     savingsAccount: SavingsAccountDataSchema
     savingsRecurringDeposits: List[SavingsRecurringDepositSchema] = Field(
         alias="savings_recurring_deposits"

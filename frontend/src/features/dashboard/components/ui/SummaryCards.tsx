@@ -51,6 +51,18 @@ export function SummaryCards({
           </div>
           <div className="flex flex-col">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+              Unaccounted Spending
+            </span>
+            <span className="text-3xl font-bold text-destructive">
+              ${financeData.unaccountedSpending.toFixed(2)}
+            </span>
+            <span className="text-[10px] text-muted-foreground mt-1">
+              Expenses not tied to bills this month
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               Savings Balance
             </span>
             <span className="text-3xl font-bold">
