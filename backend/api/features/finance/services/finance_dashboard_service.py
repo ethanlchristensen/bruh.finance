@@ -88,7 +88,6 @@ class FinanceDashboardService:
                     "amount": bill.amount,
                     "dueDay": bill.due_day,
                     "category": bill.category,
-                    "color": bill.color,
                     "total": bill.total,
                     "amountPaid": bill.amount_paid or Decimal("0.00"),
                 }
