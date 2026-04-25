@@ -3,7 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { type CalendarDay } from "@/lib/finance-api";
 import { useActionButtons } from "./hooks/action-buttons/useActionButtons";
 import { ExportCSVDialog } from "../dialogs/ExportCSVDialog";
-import { useState, useRef } from "react";
+import { ImportCSVDialog } from "../dialogs/ImportCSVDialog";
+import { useState } from "react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
@@ -21,8 +22,8 @@ export function ActionButtons({
   asMenuItems = false,
 }: ActionButtonsProps) {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { handleCSVImport, handleExportCSV } = useActionButtons(
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const { handleFileImport, handleExportCSV } = useActionButtons(
     onDataRefresh,
     calendarDays,
     monthsToShow,
@@ -31,7 +32,12 @@ export function ActionButtons({
   if (asMenuItems) {
     return (
       <>
-        <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            setImportDialogOpen(true);
+          }}
+        >
           <Upload className="h-4 w-4 mr-2" />
           Import CSV
         </DropdownMenuItem>
@@ -51,12 +57,10 @@ export function ActionButtons({
           </DropdownMenuItem>
         </Link>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv"
-          className="hidden"
-          onChange={handleCSVImport}
+        <ImportCSVDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onImport={handleFileImport}
         />
 
         <ExportCSVDialog
@@ -70,20 +74,19 @@ export function ActionButtons({
 
   return (
     <>
-      <label htmlFor="csv-upload">
-        <Button size="sm" variant="outline" asChild>
-          <span className="cursor-pointer">
-            <Upload className="h-4 w-4 mr-2" />
-            Import CSV
-          </span>
-        </Button>
-      </label>
-      <input
-        id="csv-upload"
-        type="file"
-        accept=".csv"
-        className="hidden"
-        onChange={handleCSVImport}
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => setImportDialogOpen(true)}
+      >
+        <Upload className="h-4 w-4 mr-2" />
+        Import CSV
+      </Button>
+
+      <ImportCSVDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleFileImport}
       />
 
       <Button

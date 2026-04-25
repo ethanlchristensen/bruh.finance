@@ -6,6 +6,19 @@ export function useActionButtons(
   calendarDays: CalendarDay[],
   monthsToShow: number,
 ) {
+  const handleFileImport = async (file: File) => {
+    try {
+      await importCSV(file);
+      await onDataRefresh();
+    } catch (error) {
+      console.error("Failed to import CSV:", error);
+      alert(
+        "Failed to import CSV. Please check the file format and try again.",
+      );
+      throw error;
+    }
+  };
+
   const handleCSVImport = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -13,14 +26,9 @@ export function useActionButtons(
     if (!file) return;
 
     try {
-      await importCSV(file);
-      await onDataRefresh();
+      await handleFileImport(file);
       event.target.value = "";
     } catch (error) {
-      console.error("Failed to import CSV:", error);
-      alert(
-        "Failed to import CSV. Please check the file format and try again.",
-      );
       event.target.value = "";
     }
   };
@@ -62,6 +70,7 @@ export function useActionButtons(
 
   return {
     handleCSVImport,
+    handleFileImport,
     handleExportCSV,
   };
 }
